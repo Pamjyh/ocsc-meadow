@@ -108,7 +108,8 @@ export function TopNav({
               onClick={() => setPickerOpen((prev) => !prev)}
               aria-expanded={pickerOpen}
               aria-haspopup="dialog"
-              title={`เปลี่ยนภาพพื้นหลัง (ปัจจุบัน: ${activeScene.title})`}
+              aria-label="เปลี่ยนภาพพื้นหลัง"
+              title="เปลี่ยนภาพพื้นหลัง"
             >
               <span className="scene-btn-thumb-wrap" aria-hidden="true">
                 <img
@@ -126,12 +127,6 @@ export function TopNav({
                 role="dialog"
                 aria-label="เลือกภาพพื้นหลัง"
               >
-                <div className="scene-picker-head">
-                  <span className="scene-picker-title">เลือกภาพพื้นหลัง</span>
-                  <span className="scene-picker-count">
-                    {SCENE_CATALOG.length} ฉาก
-                  </span>
-                </div>
                 <div className="scene-picker-grid">
                   {SCENE_CATALOG.map((scene) => {
                     const isSelected = scene.id === sceneId;
@@ -142,6 +137,8 @@ export function TopNav({
                         className={`scene-picker-item${
                           isSelected ? ' scene-picker-item--active' : ''
                         }`}
+                        aria-label={scene.ariaLabel}
+                        aria-pressed={isSelected}
                         onClick={() => {
                           onSelectScene(scene.id);
                           setPickerOpen(false);
@@ -150,18 +147,16 @@ export function TopNav({
                         <span className="scene-item-preview">
                           <img
                             src={scene.previewUrl}
-                            alt={scene.title}
+                            alt=""
                             className="scene-item-img"
                             loading="lazy"
                           />
-                          <span className="scene-item-badge">{scene.badge}</span>
                           {isSelected && (
                             <span className="scene-item-check" aria-hidden="true">
                               ✓
                             </span>
                           )}
                         </span>
-                        <span className="scene-item-name">{scene.title}</span>
                       </button>
                     );
                   })}

@@ -72,6 +72,7 @@ export function MeadowScene({
         scene.previewUrl,
         scene.shaderMode,
         shouldPause,
+        hourFloat,
       )
         .then((handle) => {
           if (cancelled) {
@@ -107,6 +108,7 @@ export function MeadowScene({
 
   useEffect(() => {
     meadowHandleRef.current?.setHour(hourFloat);
+    livingHandleRef.current?.setHour(hourFloat);
   }, [hourFloat]);
 
   return (
