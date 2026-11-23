@@ -24,16 +24,21 @@
   user-select: none;
 }
 
+/* Soft translucent glass scrim on reading/exam views (no full-screen blur to keep mobile 60fps - F2) */
 .meadow-paper-veil {
   position: fixed;
   inset: 0;
   z-index: var(--z-veil);
   pointer-events: none;
-  background: var(--surface-paper-veil);
+  background: rgba(244, 249, 252, 0.12);
   opacity: 0;
-  transition: opacity 280ms ease;
+  transition: opacity 320ms ease, background-color 600ms ease;
 }
 
 .meadow-paper-veil--active {
   opacity: 1;
+}
+
+.theme-night .meadow-paper-veil {
+  background: rgba(6, 14, 28, 0.22);
 }

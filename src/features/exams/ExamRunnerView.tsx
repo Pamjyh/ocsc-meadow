@@ -200,7 +200,7 @@ export function ExamRunnerView({
 
   if (loading) {
     return (
-      <section className="paper-card" style={{ padding: 32 }}>
+      <section className="runner-question-card" style={{ padding: 32 }}>
         <p style={{ color: 'var(--text-muted)' }}>กำลังเตรียมชุดข้อสอบ...</p>
       </section>
     );
@@ -208,7 +208,7 @@ export function ExamRunnerView({
 
   if (!detail || questions.length === 0) {
     return (
-      <section className="paper-card" style={{ padding: 32 }}>
+      <section className="runner-question-card" style={{ padding: 32 }}>
         <h2>ไม่พบชุดข้อสอบนี้</h2>
         <button
           type="button"
@@ -310,12 +310,12 @@ export function ExamRunnerView({
                     ? 'var(--status-pass)'
                     : isPicked
                       ? 'var(--status-fail)'
-                      : 'rgba(31, 41, 51, 0.10)';
+                      : undefined;
                   const bg = isRight
-                    ? 'var(--status-pass-bg)'
+                    ? 'rgba(46, 125, 82, 0.16)'
                     : isPicked
-                      ? 'var(--status-fail-bg)'
-                      : '#ffffff';
+                      ? 'rgba(185, 28, 28, 0.16)'
+                      : undefined;
                   return (
                     <div
                       key={key}

@@ -1,4 +1,4 @@
-/* Smooth 700ms dissolve between Light and Dark Liquid Glass */
+/* Smooth 600ms dissolve between Light and Dark Liquid Glass across ALL pages */
 .glass-card,
 .top-nav-inner,
 .top-nav-links,
@@ -11,6 +11,18 @@
 .dash-mini-btn,
 .pomo-fab,
 .pomo-panel,
+.study-sidebar,
+.study-reader,
+.study-mobile-toggle,
+.exams-header-card,
+.exam-card,
+.pdf-item-card,
+.pdf-viewer-card,
+.runner-top,
+.runner-question-card,
+.runner-nav-panel,
+.review-summary,
+.review-item,
 .dash-greeting,
 .dash-encourage,
 .dash-section-title,
@@ -26,18 +38,50 @@
 }
 
 /* Adaptive Apple Dark Liquid Glass when twilight/night atmosphere is active (18:36 - 05:36) */
-.theme-night .glass-card {
+.theme-night {
+  --text-primary: #f1f6fc;
+  --text-secondary: #c2d6eb;
+  --text-muted: #9eb7d2;
+}
+
+.theme-night .glass-card,
+.theme-night .study-sidebar,
+.theme-night .study-mobile-toggle,
+.theme-night .exams-header-card,
+.theme-night .exam-card,
+.theme-night .pdf-item-card,
+.theme-night .pdf-viewer-card,
+.theme-night .runner-top,
+.theme-night .runner-nav-panel,
+.theme-night .review-summary {
   background: linear-gradient(
     145deg,
-    rgba(16, 30, 54, 0.56) 0%,
-    rgba(11, 22, 42, 0.44) 60%,
-    rgba(20, 36, 62, 0.50) 100%
+    rgba(16, 30, 54, 0.62) 0%,
+    rgba(11, 22, 42, 0.50) 60%,
+    rgba(20, 36, 62, 0.56) 100%
   );
   border-color: rgba(186, 218, 255, 0.24);
   box-shadow:
     0 16px 40px rgba(4, 10, 24, 0.45),
-    inset 0 1.5px 0 rgba(210, 232, 255, 0.30),
+    inset 0 1.5px 0 rgba(210, 232, 255, 0.28),
     inset 0 -1.5px 3px rgba(0, 0, 0, 0.32);
+}
+
+/* Slightly deeper smoked glass for long-form reading & exam questions at night */
+.theme-night .study-reader,
+.theme-night .runner-question-card,
+.theme-night .review-item {
+  background: linear-gradient(
+    145deg,
+    rgba(14, 26, 48, 0.76) 0%,
+    rgba(10, 20, 38, 0.68) 60%,
+    rgba(18, 32, 56, 0.72) 100%
+  );
+  border-color: rgba(186, 218, 255, 0.26);
+  box-shadow:
+    0 18px 44px rgba(4, 10, 24, 0.52),
+    inset 0 1.5px 0 rgba(210, 232, 255, 0.28),
+    inset 0 -1.5px 3px rgba(0, 0, 0, 0.34);
 }
 
 .theme-night .glass-card::before {
@@ -61,9 +105,30 @@
 .theme-night .dash-official-name,
 .theme-night .top-nav-brand,
 .theme-night .pomo-title,
-.theme-night .pomo-clock {
+.theme-night .pomo-clock,
+.theme-night .study-doc-title,
+.theme-night .study-group-head,
+.theme-night .study-mobile-toggle,
+.theme-night .exam-card-title,
+.theme-night .runner-prompt {
   color: #f1f6fc;
-  text-shadow: 0 1px 10px rgba(6, 14, 28, 0.55);
+  text-shadow: 0 1px 10px rgba(6, 14, 28, 0.45);
+}
+
+.theme-night .study-prose,
+.theme-night .study-prose h2,
+.theme-night .study-prose h3,
+.theme-night .review-explanation {
+  color: #e4eef8;
+  text-shadow: none;
+}
+
+.theme-night .study-prose h2 {
+  color: #9fd0ff;
+}
+
+.theme-night .study-prose h3 {
+  color: #bfe0ff;
 }
 
 .theme-night .dash-encourage,
@@ -72,8 +137,13 @@
 .theme-night .dash-official-meta,
 .theme-night .dash-subject-stats,
 .theme-night .dash-time-unit,
-.theme-night .pomo-footer {
-  color: #bfd2e8;
+.theme-night .pomo-footer,
+.theme-night .study-group-count,
+.theme-night .study-item-btn,
+.theme-night .exam-card-desc,
+.theme-night .exam-meta-row,
+.theme-night .pdf-demo-box {
+  color: #c2d6eb;
 }
 
 .theme-night .dash-countdown-date {
@@ -81,22 +151,73 @@
 }
 
 .theme-night .dash-time-box,
-.theme-night .dash-official-item {
+.theme-night .dash-official-item,
+.theme-night .study-group-head,
+.theme-night .study-prose blockquote,
+.theme-night .study-prose table,
+.theme-night .runner-prompt table,
+.theme-night .review-explanation,
+.theme-night .pdf-demo-box {
   background: rgba(18, 34, 60, 0.62);
-  border-color: rgba(186, 218, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.18);
+  border-color: rgba(186, 218, 255, 0.20);
+  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.16);
 }
 
-.theme-night .dash-pill {
-  background: rgba(24, 44, 76, 0.70);
-  border-color: rgba(186, 218, 255, 0.24);
+.theme-night .study-prose blockquote {
+  color: #cfe5ff;
+}
+
+.theme-night .study-prose th,
+.theme-night .runner-prompt th,
+.theme-night .study-prose code {
+  background: rgba(28, 50, 84, 0.72);
+  color: #eef5fc;
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .study-search,
+.theme-night .pdf-note-input {
+  background: rgba(14, 28, 52, 0.68);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #f0f6fc;
+}
+
+.theme-night .study-search::placeholder,
+.theme-night .pdf-note-input::placeholder {
+  color: #9bb3cc;
+}
+
+.theme-night .dash-pill,
+.theme-night .study-subject-tag,
+.theme-night .exam-chip,
+.theme-night .runner-timer {
+  background: rgba(24, 44, 76, 0.72);
+  border-color: rgba(186, 218, 255, 0.26);
   color: #cde4ff;
   box-shadow: none;
 }
 
-.theme-night .dash-pill--sync {
-  background: rgba(24, 68, 48, 0.72);
-  color: #9be7bc;
+.theme-night .dash-pill--sync,
+.theme-night .exam-chip--pass,
+.theme-night .study-action-btn--done {
+  background: rgba(24, 74, 50, 0.78);
+  border-color: rgba(155, 231, 188, 0.30);
+  color: #a6f0c4;
+}
+
+.theme-night .exam-chip--fail,
+.theme-night .runner-timer--urgent {
+  background: rgba(112, 34, 38, 0.82);
+  border-color: rgba(255, 184, 184, 0.28);
+  color: #ffb8b8;
+}
+
+.theme-night .exam-chip--resume,
+.theme-night .study-action-btn--bm,
+.theme-night .runner-num-btn--flagged {
+  background: rgba(110, 72, 22, 0.80);
+  border-color: rgba(255, 214, 148, 0.32);
+  color: #ffe0a8;
 }
 
 .theme-night .dash-btn-secondary,
@@ -104,17 +225,51 @@
 .theme-night .pomo-secondary-btn,
 .theme-night .pomo-preset-btn,
 .theme-night .pomo-step-btn,
-.theme-night .pomo-icon-btn {
-  background: rgba(24, 44, 76, 0.66);
-  border-color: rgba(186, 218, 255, 0.26);
+.theme-night .pomo-icon-btn,
+.theme-night .study-filter-btn,
+.theme-night .study-font-group,
+.theme-night .study-action-btn,
+.theme-night .study-nav-btn,
+.theme-night .exams-tabs,
+.theme-night .exams-filter-pill,
+.theme-night .exam-btn-practice,
+.theme-night .runner-choice-btn,
+.theme-night .runner-num-btn {
+  background: rgba(24, 44, 76, 0.64);
+  border-color: rgba(186, 218, 255, 0.24);
   color: #e6f0fa;
-  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.16);
+}
+
+.theme-night .study-font-btn,
+.theme-night .exams-tab-btn {
+  color: #c2d6eb;
+}
+
+.theme-night .study-filter-btn--active,
+.theme-night .study-item-btn--active,
+.theme-night .study-font-btn--active,
+.theme-night .exams-tab-btn--active,
+.theme-night .exams-filter-pill--active,
+.theme-night .runner-choice-btn--selected,
+.theme-night .runner-num-btn--answered,
+.theme-night .pdf-item-card--active {
+  background: linear-gradient(180deg, rgba(52, 92, 146, 0.86), rgba(34, 66, 110, 0.76));
+  border-color: rgba(196, 224, 255, 0.44);
+  color: #ffffff;
+}
+
+.theme-night .runner-choice-key {
+  background: rgba(14, 28, 52, 0.75);
+  color: #d6e8fb;
 }
 
 .theme-night .dash-btn-secondary:hover,
 .theme-night .dash-mini-btn:hover,
-.theme-night .pomo-preset-btn--active {
-  background: rgba(42, 72, 118, 0.86);
+.theme-night .pomo-preset-btn--active,
+.theme-night .study-item-btn:hover,
+.theme-night .runner-choice-btn:hover {
+  background: rgba(42, 72, 118, 0.82);
   color: #ffffff;
 }
 
@@ -187,9 +342,7 @@
   }
 }
 
-/* Keep study/exam paper cards crisp warm paper when dimmed reading mode is active */
-.theme-night .paper-card h2,
-.theme-night .paper-card h3 {
-  color: #1f2933;
-  text-shadow: none;
+.theme-night .study-reader-top,
+.theme-night .study-footer-nav {
+  border-color: rgba(186, 218, 255, 0.16);
 }

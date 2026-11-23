@@ -234,7 +234,7 @@ export function ExamsHubView({
                   onClick={() => setSelectedPdfId(pdf.id)}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                    <strong style={{ fontSize: '0.94rem', color: '#162432' }}>
+                    <strong style={{ fontSize: '0.94rem', color: 'var(--text-primary)' }}>
                       {pdf.title}
                     </strong>
                     {done && <span className="exam-chip exam-chip--pass">✓ ทำแล้ว</span>}
@@ -301,7 +301,7 @@ export function ExamsHubView({
                 />
               ) : (
                 <div className="pdf-demo-box">
-                  <p style={{ fontWeight: 600, color: '#162432' }}>
+                  <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                     โหมดข้อมูลตัวอย่าง — พร้อมแสดงไฟล์ PDF จริงทันทีเมื่อเชื่อม Google Drive
                   </p>
                   <p style={{ marginTop: 8, fontSize: '0.88rem' }}>
