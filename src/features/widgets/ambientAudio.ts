@@ -291,8 +291,6 @@ class AmbientAudioEngine {
     const activeOscs = new Set<OscillatorNode>();
 
     const triggerChord = () => {
-      // Skip scheduling oscillators if OS/browser suspended audio (e.g. headphone disconnect) (F56)
-      if (ctx.state !== 'running') return;
       const notes = chords[step % chords.length]!;
       step += 1;
       const now = ctx.currentTime;
@@ -337,8 +335,12 @@ class AmbientAudioEngine {
       });
     };
 
+    // Schedule first chord immediately (even while ctx.resume() is still resolving) (F57)
     triggerChord();
-    const intervalId = window.setInterval(triggerChord, 3400);
+    // Guard subsequent interval ticks so OS-suspended audio doesn't schedule silent oscillators (F56)
+    const intervalId = window.setInterval(() => {
+      if (ctx.state === 'running') triggerChord();
+    }, 3400);
 
     return () => {
       window.clearInterval(intervalId);
