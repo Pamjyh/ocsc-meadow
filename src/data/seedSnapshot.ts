@@ -13,7 +13,7 @@ import type {
 export const SEED_BOOTSTRAP: BootstrapPayload = {
   generatedAt: '2026-11-22T16:00:00.000Z',
   config: {
-    siteTitle: 'ทุ่งหญ้าเตรียมสอบ ก.พ.',
+    siteTitle: 'เตรียมสอบ ก.พ.',
     learnerName: 'คนเก่ง',
     examLabel: 'สอบ ก.พ. ภาค ก (ระดับปริญญาตรี)',
     examDateIso: '2027-07-04T09:00:00+07:00',

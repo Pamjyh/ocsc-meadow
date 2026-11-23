@@ -1,5 +1,5 @@
 /**
- * OCSC Meadow (ทุ่งหญ้าเตรียมสอบ ก.พ.) — Google Apps Script Backend
+ * OCSC Meadow (เตรียมสอบ ก.พ.) — Google Apps Script Backend
  * -------------------------------------------------------------------
  * Responsibilities:
  *  1. setupDriveStructure() : Idempotently creates Google Drive folders & OCSC_Meadow_DB Sheet.
@@ -188,7 +188,7 @@ function initializeDatabaseTabs_(ss) {
   if (configSheet.getLastRow() === 0) {
     var configRows = [
       ['key', 'value', 'note'],
-      ['siteTitle', 'ทุ่งหญ้าเตรียมสอบ ก.พ.', 'ชื่อหน้าเว็บ'],
+      ['siteTitle', 'เตรียมสอบ ก.พ.', 'ชื่อหน้าเว็บ'],
       ['learnerName', 'คนเก่ง', 'ชื่อเรียกผู้เรียนบนหน้าแรก'],
       ['examLabel', 'สอบ ก.พ. ภาค ก (ระดับปริญญาตรี)', 'ชื่อสนามสอบในการ์ดนับถอยหลัง'],
       ['examDateIso', '2027-07-04T09:00:00+07:00', 'วันสอบจริงรูปแบบ ISO +07:00'],
@@ -585,7 +585,7 @@ function readConfig_(ss) {
   }
 
   return {
-    siteTitle: String(kv.siteTitle || 'ทุ่งหญ้าเตรียมสอบ ก.พ.'),
+    siteTitle: String(kv.siteTitle || 'เตรียมสอบ ก.พ.'),
     learnerName: String(kv.learnerName || 'คนเก่ง'),
     examLabel: String(kv.examLabel || 'สอบ ก.พ. ภาค ก (ระดับปริญญาตรี)'),
     examDateIso:
