@@ -17,6 +17,9 @@ import {
 import { useHashRoute } from './services/router';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
 import { TopNav } from './ui/TopNav';
+import { GlobalMusicDock } from './features/widgets/GlobalMusicDock';
+import { loadMusicState, saveMusicState } from './features/widgets/musicStore';
+import type { MusicSavedLink, MusicState } from './features/widgets/widgetTypes';
 
 export function App() {
   const { route, navigate } = useHashRoute();
@@ -25,6 +28,11 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('demo');
   const [hourFloat, setHourFloat] = useState<number>(() => getBangkokHourFloat());
   const [selectedExamMode, setSelectedExamMode] = useState<ExamMode>('timed');
+  const [music, setMusic] = useState<MusicState>(loadMusicState);
+
+  useEffect(() => {
+    saveMusicState(music);
+  }, [music]);
 
   const progressRef = useRef<UserProgress>(progress);
   progressRef.current = progress;
@@ -122,6 +130,52 @@ export function App() {
     }
   }, [isNight]);
 
+  const handleSelectTrack = useCallback(
+    (track: {
+      title: string;
+      originalUrl: string;
+      embedType: 'video' | 'playlist';
+      embedId: string;
+    }) => {
+      setMusic((prev) => ({
+        ...prev,
+        ...track,
+        isOpen: true,
+        isCollapsed: false,
+      }));
+    },
+    [],
+  );
+
+  const handleSaveMusicLink = useCallback((link: MusicSavedLink) => {
+    setMusic((prev) => ({
+      ...prev,
+      savedLinks: [link, ...prev.savedLinks.filter((s) => s.embedId !== link.embedId)].slice(
+        0,
+        12,
+      ),
+    }));
+  }, []);
+
+  const handleDeleteMusicLink = useCallback((id: string) => {
+    setMusic((prev) => ({
+      ...prev,
+      savedLinks: prev.savedLinks.filter((s) => s.id !== id),
+    }));
+  }, []);
+
+  const handleOpenMusicDock = useCallback(() => {
+    setMusic((prev) => ({ ...prev, isOpen: true, isCollapsed: false }));
+  }, []);
+
+  const handleCloseMusicDock = useCallback(() => {
+    setMusic((prev) => ({ ...prev, isOpen: false }));
+  }, []);
+
+  const handleToggleMusicCollapse = useCallback(() => {
+    setMusic((prev) => ({ ...prev, isCollapsed: !prev.isCollapsed }));
+  }, []);
+
   return (
     <div className={`app-shell${isNight ? ' theme-night' : ''}`}>
       <LiquidGlassFilters />
@@ -147,6 +201,12 @@ export function App() {
             progress={progress}
             syncStatus={syncStatus}
             onNavigate={navigate}
+            music={music}
+            onSelectTrack={handleSelectTrack}
+            onSaveMusicLink={handleSaveMusicLink}
+            onDeleteMusicLink={handleDeleteMusicLink}
+            onOpenMusicDock={handleOpenMusicDock}
+            onCloseMusicDock={handleCloseMusicDock}
           />
         )}
 
@@ -182,6 +242,12 @@ export function App() {
           />
         )}
       </main>
+
+      <GlobalMusicDock
+        music={music}
+        onToggleCollapse={handleToggleMusicCollapse}
+        onClose={handleCloseMusicDock}
+      />
 
       <PomodoroWidget
         muted={progress.preferences.pomodoroMuted}

@@ -1,0 +1,271 @@
+/* F33: Keep collapsed GlobalMusicDock pill compact on narrow phones (360px+) */
+@media (max-width: 768px) {
+  .music-dock-pill-main {
+    max-width: 118px;
+  }
+}
+
+/* Aesthetic Clock Card */
+.clock-card {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.clock-top {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clock-greeting {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #102436;
+}
+
+.clock-date {
+  font-size: 0.84rem;
+  color: #365066;
+}
+
+.clock-digits {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 3.2rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #0e2234;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  margin: 6px 0;
+}
+
+.clock-colon {
+  opacity: 0.55;
+}
+
+.clock-sec {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #365066;
+  margin-left: 4px;
+}
+
+.clock-quote-input {
+  width: 100%;
+  border: none;
+  border-top: 1px solid rgba(20, 48, 74, 0.1);
+  background: transparent;
+  padding: 10px 0 2px;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: #243b50;
+}
+
+.clock-quote-input:focus {
+  outline: none;
+}
+
+/* Daily Goals (3 Tasks) Card */
+.goals-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goals-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+}
+
+.goals-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(58, 142, 206, 0.55);
+  background: rgba(255, 255, 255, 0.85);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 160ms ease;
+}
+
+.goals-check--checked {
+  background: linear-gradient(180deg, #3da468, #2c8652);
+  border-color: #2c8652;
+  transform: scale(1.06);
+}
+
+.goals-text-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: #102436;
+}
+
+.goals-text-input:focus {
+  outline: none;
+}
+
+.goals-item--done .goals-text-input {
+  text-decoration: line-through;
+  opacity: 0.62;
+}
+
+/* Quick Study Card */
+.quick-study-head-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.quick-study-prompt {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.65;
+  color: #102436;
+  white-space: pre-line;
+}
+
+.quick-study-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quick-choice-btn {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.72);
+  color: #143048;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.45;
+}
+
+.quick-choice-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.quick-choice-key {
+  font-weight: 700;
+  color: var(--accent-primary-hover);
+  flex-shrink: 0;
+}
+
+.quick-choice--correct {
+  background: rgba(220, 247, 229, 0.94);
+  border-color: rgba(46, 125, 82, 0.45);
+  color: #154e2c;
+}
+
+.quick-choice--wrong {
+  background: rgba(253, 232, 232, 0.94);
+  border-color: rgba(198, 67, 67, 0.42);
+  color: #8f2626;
+}
+
+.quick-study-explain {
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.quick-study-explain--pass {
+  background: rgba(226, 248, 232, 0.85);
+  border: 1px solid rgba(46, 125, 82, 0.25);
+  color: #175230;
+}
+
+.quick-study-explain--fail {
+  background: rgba(254, 243, 224, 0.88);
+  border: 1px solid rgba(200, 125, 32, 0.28);
+  color: #6b4210;
+}
+
+.quick-study-verdict {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.quick-study-explain-text {
+  margin: 0;
+  white-space: pre-line;
+}
+
+@media (max-width: 640px) {
+  .quick-study-choices {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Night Mode (.theme-night) for Stage 3 Widgets */
+.theme-night .clock-greeting,
+.theme-night .clock-digits,
+.theme-night .goals-text-input,
+.theme-night .quick-study-prompt {
+  color: #f1f6fc;
+}
+
+.theme-night .clock-date,
+.theme-night .clock-sec,
+.theme-night .clock-quote-input {
+  color: #c2d6eb;
+}
+
+.theme-night .clock-quote-input {
+  border-top-color: rgba(186, 218, 255, 0.18);
+}
+
+.theme-night .goals-item,
+.theme-night .quick-choice-btn {
+  background: rgba(18, 34, 60, 0.66);
+  border-color: rgba(186, 218, 255, 0.22);
+  color: #e6f0fa;
+}
+
+.theme-night .quick-choice-key {
+  color: #9ed2ff;
+}
+
+.theme-night .quick-choice--correct,
+.theme-night .quick-study-explain--pass {
+  background: rgba(24, 74, 50, 0.82);
+  border-color: rgba(155, 231, 188, 0.32);
+  color: #b4f5cd;
+}
+
+.theme-night .quick-choice--wrong {
+  background: rgba(112, 34, 38, 0.82);
+  border-color: rgba(255, 184, 184, 0.3);
+  color: #ffc2c2;
+}
+
+.theme-night .quick-study-explain--fail {
+  background: rgba(102, 68, 22, 0.82);
+  border-color: rgba(255, 214, 148, 0.3);
+  color: #ffe2b0;
+}

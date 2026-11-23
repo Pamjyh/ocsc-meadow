@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { BootstrapPayload, SubjectCode, UserProgress } from '../../domain/models';
 import {
   computeOfficialSubjectRollup,
@@ -11,6 +12,32 @@ import {
   type GlassIconName,
   type GlassIconTone,
 } from '../../ui/LiquidGlassIcon';
+import { AestheticClockCard } from '../widgets/cards/AestheticClockCard';
+import { DailyGoalsCard } from '../widgets/cards/DailyGoalsCard';
+import { PhotoCollectionCard } from '../widgets/cards/PhotoCollectionCard';
+import { QuickStudyCard } from '../widgets/cards/QuickStudyCard';
+import { StickyNoteCard } from '../widgets/cards/StickyNoteCard';
+import { YouTubeMusicCard } from '../widgets/cards/YouTubeMusicCard';
+import { WidgetGalleryModal } from '../widgets/WidgetGalleryModal';
+import { WidgetShell } from '../widgets/WidgetShell';
+import {
+  addWidget,
+  createDefaultWidgetLayout,
+  loadWidgetLayout,
+  moveWidget,
+  removeWidget,
+  saveWidgetLayout,
+  toggleWidgetSize,
+  updateWidgetConfig,
+} from '../widgets/widgetStore';
+import {
+  type MusicSavedLink,
+  type MusicState,
+  type WidgetItem,
+  type WidgetLayoutState,
+  type WidgetType,
+} from '../widgets/widgetTypes';
+import '../widgets/widgets.css';
 import { CountdownCard } from './CountdownCard';
 import './DashboardView.css';
 
@@ -19,6 +46,17 @@ interface DashboardViewProps {
   progress: UserProgress;
   syncStatus: SyncStatus;
   onNavigate: (route: AppRoute) => void;
+  music: MusicState;
+  onSelectTrack: (track: {
+    title: string;
+    originalUrl: string;
+    embedType: 'video' | 'playlist';
+    embedId: string;
+  }) => void;
+  onSaveMusicLink: (link: MusicSavedLink) => void;
+  onDeleteMusicLink: (id: string) => void;
+  onOpenMusicDock: () => void;
+  onCloseMusicDock: () => void;
 }
 
 const SYNC_LABELS: Record<SyncStatus, string> = {
@@ -57,8 +95,81 @@ export function DashboardView({
   progress,
   syncStatus,
   onNavigate,
+  music,
+  onSelectTrack,
+  onSaveMusicLink,
+  onDeleteMusicLink,
+  onOpenMusicDock,
+  onCloseMusicDock,
 }: DashboardViewProps) {
   const { config, subjects, studyItems, pdfExams } = bootstrap;
+
+  const [layout, setLayout] = useState<WidgetLayoutState>(loadWidgetLayout);
+  const [editMode, setEditMode] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+
+  useEffect(() => {
+    saveWidgetLayout(layout);
+  }, [layout]);
+
+  const visibleItems = useMemo(
+    () => layout.items.filter((item) => item.visible),
+    [layout.items],
+  );
+
+  const handleMove = useCallback((id: string, dir: -1 | 1) => {
+    setLayout((prev) => ({
+      ...prev,
+      items: moveWidget(prev.items, id, dir),
+    }));
+  }, []);
+
+  const handleToggleSize = useCallback((id: string) => {
+    setLayout((prev) => ({
+      ...prev,
+      items: toggleWidgetSize(prev.items, id),
+    }));
+  }, []);
+
+  const handleRemove = useCallback((id: string) => {
+    setLayout((prev) => ({
+      ...prev,
+      items: removeWidget(prev.items, id),
+    }));
+  }, []);
+
+  const handleAddByType = useCallback((type: WidgetType) => {
+    setLayout((prev) => ({
+      ...prev,
+      items: addWidget(prev.items, type),
+    }));
+  }, []);
+
+  const handleRemoveByType = useCallback((type: WidgetType) => {
+    setLayout((prev) => {
+      const target = prev.items.find((i) => i.type === type && i.visible);
+      if (!target) return prev;
+      return {
+        ...prev,
+        items: removeWidget(prev.items, target.id),
+      };
+    });
+  }, []);
+
+  const handleUpdateConfig = useCallback(
+    (id: string, patch: Record<string, unknown>) => {
+      setLayout((prev) => ({
+        ...prev,
+        items: updateWidgetConfig(prev.items, id, patch),
+      }));
+    },
+    [],
+  );
+
+  const handleResetDefaults = useCallback(() => {
+    setLayout(createDefaultWidgetLayout());
+  }, []);
+
   const officialRollup = computeOfficialSubjectRollup(
     progress.examAttempts,
     config.passThresholds,
@@ -67,181 +178,343 @@ export function DashboardView({
   const pdfSummary = countActiveCompletedPdfs(pdfExams, progress);
 
   const lastStudy = progress.lastVisitedStudyId
-    ? studyItems.find((s) => s.id === progress.lastVisitedStudyId)
+    ? studyItems.find((s) => s.id === progress.lastVisitedStudyId) ?? null
     : null;
   const firstInProgressExamId = Object.keys(progress.inProgressExams)[0] ?? null;
 
-  return (
-    <div className="dash-wrap">
-      <section className="dash-hero">
-        <div className="glass-card dash-welcome">
-          <div>
-            <div className="dash-status-row">
-              <span className="dash-pill">{config.examLabel}</span>
-              <span
-                className={`dash-pill${
-                  syncStatus === 'synced'
-                    ? ' dash-pill--sync'
-                    : syncStatus === 'offline'
-                      ? ' dash-pill--offline'
-                      : ''
-                }`}
-              >
-                {SYNC_LABELS[syncStatus]}
-              </span>
-            </div>
-            <h1 className="dash-greeting" style={{ marginTop: 14 }}>
-              สวัสดีครับ, {config.learnerName}
-            </h1>
-            <p className="dash-encourage">{config.encouragementMessage}</p>
-          </div>
-
-          <div className="dash-cta-row">
-            {lastStudy ? (
-              <button
-                type="button"
-                className="dash-btn-primary"
-                onClick={() => onNavigate({ name: 'study', docId: lastStudy.id })}
-              >
-                อ่านต่อ: {lastStudy.title}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="dash-btn-primary"
-                onClick={() => onNavigate({ name: 'study', docId: studyItems[0]?.id ?? null })}
-              >
-                เริ่มอ่านคลังเนื้อหา
-              </button>
-            )}
-
-            {firstInProgressExamId ? (
-              <button
-                type="button"
-                className="dash-btn-secondary"
-                onClick={() =>
-                  onNavigate({ name: 'exam-runner', examId: firstInProgressExamId })
-                }
-              >
-                ทำข้อสอบที่ค้างไว้ต่อ
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="dash-btn-secondary"
-                onClick={() => onNavigate({ name: 'exams', tab: 'interactive' })}
-              >
-                ฝึกทำข้อสอบจับเวลา
-              </button>
-            )}
-          </div>
-        </div>
-
-        <CountdownCard
-          examDateIso={config.examDateIso}
-          studyCompleted={studySummary.completed}
-          studyTotal={studySummary.total}
-          pdfCompleted={pdfSummary.completed}
-          pdfTotal={pdfSummary.total}
-        />
-      </section>
-
-      {/* Official 3-subject OCSC Bachelor's passing bar (combining Math + Thai into Analytical >= 60%) */}
-      <section className="glass-card dash-rollup-card">
-        <div className="dash-section-head">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <LiquidGlassIcon name="award" tone="meadow" size="sm" />
-            <h2 className="dash-section-title">
-              ประเมินเกณฑ์ผ่าน 3 วิชา (ตามใบผลสอบ ก.พ. ป.ตรี จริง)
-            </h2>
-          </div>
-          <span className="dash-section-sub">
-            คิดวิเคราะห์รวมคะแนนคณิต + ไทย ≥ {config.passThresholds.analytical}% · อังกฤษ ≥{' '}
-            {config.passThresholds.english}% · กฎหมาย ≥ {config.passThresholds.law}%
-          </span>
-        </div>
-
-        <div className="dash-rollup-grid">
-          {officialRollup.map((item) => {
-            const pct = item.averagePercent ?? 0;
-            return (
-              <div key={item.group} className="dash-official-item">
-                <div className="dash-official-top">
-                  <span className="dash-official-name">{item.label}</span>
-                  <span className={`dash-status-tag dash-status-tag--${item.status}`}>
-                    {STATUS_LABELS[item.status]}
-                  </span>
-                </div>
-                <div className="dash-bar-track">
-                  <div
-                    className={`dash-bar-fill dash-bar-fill--${item.status}`}
-                    style={{ width: `${Math.min(100, pct)}%` }}
-                  />
-                </div>
-                <div className="dash-official-meta">
-                  <span>
-                    {item.averagePercent !== null
-                      ? `คะแนนรวม ${item.averagePercent}% (${item.totalCorrect}/${item.totalQuestions})`
-                      : 'ยังไม่มีผลสอบ Interactive'}
-                  </span>
-                  <span>เกณฑ์ ≥ {item.passThreshold}%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 4-Subject Study & Exam Breakdown with Liquid Glass Icons */}
-      <section className="dash-subjects-grid" aria-label="ความก้าวหน้าแยกตาม 4 หมวดวิชา">
-        {subjects.map((subject) => {
-          const subjectStudies = studyItems.filter((s) => s.subjectCode === subject.code);
-          const doneStudies = subjectStudies.filter(
-            (s) => progress.completedStudies[s.id]?.active === true,
-          ).length;
-          const subjectPdfs = pdfExams.filter((p) => p.subjectCode === subject.code);
-          const donePdfs = subjectPdfs.filter(
-            (p) => progress.completedPdfs[p.id]?.active === true,
-          ).length;
-          const firstDocId = subjectStudies[0]?.id ?? null;
-          const icon = getSubjectIconSpec(subject.code);
-
-          return (
-            <article key={subject.code} className="glass-card dash-subject-card">
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <LiquidGlassIcon name={icon.name} tone={icon.tone} size="md" />
-                  <h3 className="dash-subject-title">{subject.shortTitle}</h3>
-                </div>
-                <div className="dash-subject-stats" style={{ marginTop: 10 }}>
-                  <span>
-                    เนื้อหา: {doneStudies}/{subjectStudies.length} บท
-                  </span>
-                  <span>
-                    ข้อสอบ PDF: {donePdfs}/{subjectPdfs.length} ชุด
-                  </span>
-                </div>
-              </div>
-              <div className="dash-subject-actions">
-                <button
-                  type="button"
-                  className="dash-mini-btn"
-                  onClick={() => onNavigate({ name: 'study', docId: firstDocId })}
+  const renderWidget = (item: WidgetItem) => {
+    switch (item.type) {
+      case 'core_welcome':
+        return (
+          <div className="glass-card dash-welcome">
+            <div>
+              <div className="dash-status-row">
+                <span className="dash-pill">{config.examLabel}</span>
+                <span
+                  className={`dash-pill${
+                    syncStatus === 'synced'
+                      ? ' dash-pill--sync'
+                      : syncStatus === 'offline'
+                        ? ' dash-pill--offline'
+                        : ''
+                  }`}
                 >
-                  อ่านสรุป
-                </button>
+                  {SYNC_LABELS[syncStatus]}
+                </span>
+              </div>
+              <h1 className="dash-greeting" style={{ marginTop: 14 }}>
+                สวัสดีครับ, {config.learnerName}
+              </h1>
+              <p className="dash-encourage">{config.encouragementMessage}</p>
+            </div>
+
+            <div className="dash-cta-row">
+              {lastStudy ? (
                 <button
                   type="button"
-                  className="dash-mini-btn"
+                  className="dash-btn-primary"
+                  onClick={() => onNavigate({ name: 'study', docId: lastStudy.id })}
+                >
+                  อ่านต่อ: {lastStudy.title}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="dash-btn-primary"
+                  onClick={() =>
+                    onNavigate({ name: 'study', docId: studyItems[0]?.id ?? null })
+                  }
+                >
+                  เริ่มอ่านคลังเนื้อหา
+                </button>
+              )}
+
+              {firstInProgressExamId ? (
+                <button
+                  type="button"
+                  className="dash-btn-secondary"
+                  onClick={() =>
+                    onNavigate({ name: 'exam-runner', examId: firstInProgressExamId })
+                  }
+                >
+                  ทำข้อสอบที่ค้างไว้ต่อ
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="dash-btn-secondary"
                   onClick={() => onNavigate({ name: 'exams', tab: 'interactive' })}
                 >
-                  ทำข้อสอบ
+                  ฝึกทำข้อสอบจับเวลา
                 </button>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'core_countdown':
+        return (
+          <CountdownCard
+            examDateIso={config.examDateIso}
+            studyCompleted={studySummary.completed}
+            studyTotal={studySummary.total}
+            pdfCompleted={pdfSummary.completed}
+            pdfTotal={pdfSummary.total}
+          />
+        );
+
+      case 'core_pass_rollup':
+        return (
+          <section className="glass-card dash-rollup-card">
+            <div className="dash-section-head">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <LiquidGlassIcon name="award" tone="meadow" size="sm" />
+                <h2 className="dash-section-title">
+                  ประเมินเกณฑ์ผ่าน 3 วิชา (ตามใบผลสอบ ก.พ. ป.ตรี จริง)
+                </h2>
               </div>
-            </article>
-          );
-        })}
-      </section>
+              <span className="dash-section-sub">
+                คิดวิเคราะห์รวมคะแนนคณิต + ไทย ≥ {config.passThresholds.analytical}% · อังกฤษ ≥{' '}
+                {config.passThresholds.english}% · กฎหมาย ≥ {config.passThresholds.law}%
+              </span>
+            </div>
+
+            <div className="dash-rollup-grid">
+              {officialRollup.map((rollup) => {
+                const pct = rollup.averagePercent ?? 0;
+                return (
+                  <div key={rollup.group} className="dash-official-item">
+                    <div className="dash-official-top">
+                      <span className="dash-official-name">{rollup.label}</span>
+                      <span
+                        className={`dash-status-tag dash-status-tag--${rollup.status}`}
+                      >
+                        {STATUS_LABELS[rollup.status]}
+                      </span>
+                    </div>
+                    <div className="dash-bar-track">
+                      <div
+                        className={`dash-bar-fill dash-bar-fill--${rollup.status}`}
+                        style={{ width: `${Math.min(100, pct)}%` }}
+                      />
+                    </div>
+                    <div className="dash-official-meta">
+                      <span>
+                        {rollup.averagePercent !== null
+                          ? `คะแนนรวม ${rollup.averagePercent}% (${rollup.totalCorrect}/${rollup.totalQuestions})`
+                          : 'ยังไม่มีผลสอบ Interactive'}
+                      </span>
+                      <span>เกณฑ์ ≥ {rollup.passThreshold}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+
+      case 'core_subjects':
+        return (
+          <section
+            className="dash-subjects-grid"
+            aria-label="ความก้าวหน้าแยกตาม 4 หมวดวิชา"
+          >
+            {subjects.map((subject) => {
+              const subjectStudies = studyItems.filter(
+                (s) => s.subjectCode === subject.code,
+              );
+              const doneStudies = subjectStudies.filter(
+                (s) => progress.completedStudies[s.id]?.active === true,
+              ).length;
+              const subjectPdfs = pdfExams.filter(
+                (p) => p.subjectCode === subject.code,
+              );
+              const donePdfs = subjectPdfs.filter(
+                (p) => progress.completedPdfs[p.id]?.active === true,
+              ).length;
+              const firstDocId = subjectStudies[0]?.id ?? null;
+              const icon = getSubjectIconSpec(subject.code);
+
+              return (
+                <article key={subject.code} className="glass-card dash-subject-card">
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <LiquidGlassIcon name={icon.name} tone={icon.tone} size="md" />
+                      <h3 className="dash-subject-title">{subject.shortTitle}</h3>
+                    </div>
+                    <div className="dash-subject-stats" style={{ marginTop: 10 }}>
+                      <span>
+                        เนื้อหา: {doneStudies}/{subjectStudies.length} บท
+                      </span>
+                      <span>
+                        ข้อสอบ PDF: {donePdfs}/{subjectPdfs.length} ชุด
+                      </span>
+                    </div>
+                  </div>
+                  <div className="dash-subject-actions">
+                    <button
+                      type="button"
+                      className="dash-mini-btn"
+                      onClick={() => onNavigate({ name: 'study', docId: firstDocId })}
+                    >
+                      อ่านสรุป
+                    </button>
+                    <button
+                      type="button"
+                      className="dash-mini-btn"
+                      onClick={() => onNavigate({ name: 'exams', tab: 'interactive' })}
+                    >
+                      ทำข้อสอบ
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        );
+
+      case 'ytm_player':
+        return (
+          <YouTubeMusicCard
+            music={music}
+            onSelectTrack={onSelectTrack}
+            onSaveLink={onSaveMusicLink}
+            onDeleteSavedLink={onDeleteMusicLink}
+            onOpenDock={onOpenMusicDock}
+            onCloseDock={onCloseMusicDock}
+          />
+        );
+
+      case 'photo_collection':
+        return (
+          <PhotoCollectionCard
+            config={item.config}
+            onUpdateConfig={(patch) => handleUpdateConfig(item.id, patch)}
+          />
+        );
+
+      case 'sticky_note':
+        return (
+          <StickyNoteCard
+            config={item.config}
+            onUpdateConfig={(patch) => handleUpdateConfig(item.id, patch)}
+          />
+        );
+
+      case 'aesthetic_clock':
+        return (
+          <AestheticClockCard
+            config={item.config}
+            onUpdateConfig={(patch) => handleUpdateConfig(item.id, patch)}
+          />
+        );
+
+      case 'daily_goals':
+        return (
+          <DailyGoalsCard
+            config={item.config}
+            onUpdateConfig={(patch) => handleUpdateConfig(item.id, patch)}
+          />
+        );
+
+      case 'quick_study':
+        return (
+          <QuickStudyCard
+            exams={bootstrap.exams}
+            lastStudy={lastStudy}
+            onNavigate={onNavigate}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="dash-wrap">
+      <div className="dash-toolbar">
+        {editMode ? (
+          <>
+            <button
+              type="button"
+              className="widget-pill-btn widget-pill-btn--primary"
+              onClick={() => setGalleryOpen(true)}
+            >
+              + เพิ่ม / ซ่อน Widget
+            </button>
+            <button
+              type="button"
+              className="widget-pill-btn"
+              onClick={handleResetDefaults}
+            >
+              รีเซ็ตค่าเริ่มต้น
+            </button>
+            <button
+              type="button"
+              className="widget-pill-btn"
+              onClick={() => setEditMode(false)}
+            >
+              เสร็จสิ้น
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            className="widget-pill-btn"
+            onClick={() => setEditMode(true)}
+          >
+            ปรับแต่งหน้าแรก
+          </button>
+        )}
+      </div>
+
+      <div className="bento-grid">
+        {visibleItems.length === 0 ? (
+          <div className="glass-card widget-empty-card">
+            <div className="widget-empty-title">หน้าแรกโล่งสบายตา</div>
+            <p className="widget-empty-sub">
+              คุณซ่อนหน้าต่างทั้งหมดไว้ สามารถเลือกเพิ่มกลับมาเมื่อไหร่ก็ได้
+            </p>
+            <div className="widget-empty-actions">
+              <button
+                type="button"
+                className="widget-pill-btn widget-pill-btn--primary"
+                onClick={() => setGalleryOpen(true)}
+              >
+                + เพิ่ม Widget
+              </button>
+              <button
+                type="button"
+                className="widget-pill-btn"
+                onClick={handleResetDefaults}
+              >
+                รีเซ็ตค่าเริ่มต้น
+              </button>
+            </div>
+          </div>
+        ) : (
+          visibleItems.map((item, idx) => (
+            <WidgetShell
+              key={item.id}
+              item={item}
+              editMode={editMode}
+              canMoveUp={idx > 0}
+              canMoveDown={idx < visibleItems.length - 1}
+              onMove={handleMove}
+              onToggleSize={handleToggleSize}
+              onRemove={handleRemove}
+            >
+              {renderWidget(item)}
+            </WidgetShell>
+          ))
+        )}
+      </div>
+
+      <WidgetGalleryModal
+        open={galleryOpen}
+        items={layout.items}
+        onAdd={handleAddByType}
+        onRemoveByType={handleRemoveByType}
+        onClose={() => setGalleryOpen(false)}
+      />
     </div>
   );
 }

@@ -1,0 +1,430 @@
+@import './widgets-cards.css';
+@import './widgets-stage3.css';
+
+/* Unified Bento Grid & Edit Mode Chrome */
+.dash-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.widget-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #15324a;
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 600;
+  box-shadow:
+    0 6px 16px rgba(20, 48, 74, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1), background-color 160ms ease;
+}
+
+.widget-pill-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.widget-pill-btn--primary {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(180deg, rgba(58, 142, 206, 0.94), rgba(38, 112, 174, 0.96));
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(32, 98, 154, 0.24);
+}
+
+.widget-pill-btn--primary:hover {
+  background: linear-gradient(180deg, rgba(66, 152, 216, 0.96), rgba(42, 120, 184, 0.98));
+  color: #ffffff;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.widget-shell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.widget-shell--full {
+  grid-column: 1 / -1;
+}
+
+.widget-shell-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.widget-shell-body > .glass-card {
+  flex: 1;
+}
+
+/* F26 & F30: Prevent inner multi-column core grids from squishing when resized to half-width on desktop/tablet only */
+@media (min-width: 768px) {
+  .widget-shell:not(.widget-shell--full) .dash-rollup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .widget-shell:not(.widget-shell--full) .dash-subjects-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.widget-shell--editing {
+  position: relative;
+  border-radius: 26px;
+  padding: 8px;
+  border: 1.5px dashed rgba(59, 130, 182, 0.55);
+  background: rgba(255, 255, 255, 0.22);
+  gap: 8px;
+}
+
+.widget-edit-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  flex-wrap: wrap;
+}
+
+.widget-edit-label {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #133048;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.widget-edit-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.widget-edit-btn {
+  min-height: 30px;
+  min-width: 30px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(20, 48, 74, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  color: #15324a;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.widget-edit-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.widget-edit-btn--danger {
+  color: #b43232;
+  border-color: rgba(198, 67, 67, 0.25);
+  background: rgba(253, 238, 238, 0.92);
+}
+
+/* Empty State */
+.widget-empty-card {
+  grid-column: 1 / -1;
+  padding: 36px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.widget-empty-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #102436;
+}
+
+.widget-empty-sub {
+  color: #365066;
+  font-size: 0.92rem;
+}
+
+.widget-empty-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* Stage 1 placeholder for Stage 2-3 cards until implemented */
+.widget-preview-card {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.widget-preview-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: #102436;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-preview-desc {
+  font-size: 0.88rem;
+  color: #365066;
+}
+
+/* Widget Gallery Modal (F25: z-index var(--z-modal) = 50) */
+.widget-gallery-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(10, 22, 38, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.widget-gallery-modal {
+  width: min(760px, 100%);
+  max-height: min(84vh, 720px);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: hidden;
+}
+
+.widget-gallery-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.widget-gallery-title {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #102436;
+}
+
+.widget-gallery-sub {
+  font-size: 0.86rem;
+  color: #365066;
+  margin-top: 2px;
+}
+
+.widget-gallery-scroll {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-right: 4px;
+}
+
+.widget-gallery-group-title {
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1c4c76;
+  margin-bottom: 10px;
+}
+
+.widget-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.widget-gallery-card {
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.widget-gallery-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.widget-gallery-emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.widget-gallery-card-name {
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #102436;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.widget-count-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(59, 130, 182, 0.14);
+  color: #1a5485;
+}
+
+.widget-gallery-card-desc {
+  font-size: 0.82rem;
+  color: #365066;
+  margin-top: 4px;
+  line-height: 1.45;
+}
+
+.widget-gallery-btn {
+  width: 100%;
+  min-height: 36px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+}
+
+.widget-gallery-btn--add {
+  background: linear-gradient(180deg, rgba(58, 142, 206, 0.94), rgba(38, 112, 174, 0.96));
+  color: #ffffff;
+}
+
+.widget-gallery-btn--active {
+  background: rgba(226, 248, 232, 0.9);
+  border-color: rgba(46, 125, 82, 0.25);
+  color: #195e36;
+}
+
+/* Night Mode (.theme-night) overrides matching darkGlass.css */
+.theme-night .widget-pill-btn {
+  background: rgba(24, 44, 76, 0.68);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #e8f2fc;
+  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.16);
+}
+
+.theme-night .widget-pill-btn--primary {
+  background: linear-gradient(180deg, rgba(64, 148, 214, 0.92), rgba(40, 114, 176, 0.95));
+  color: #ffffff;
+}
+
+.theme-night .widget-shell--editing {
+  border-color: rgba(142, 198, 255, 0.5);
+  background: rgba(14, 28, 52, 0.26);
+}
+
+.theme-night .widget-edit-bar {
+  background: rgba(18, 34, 60, 0.85);
+  border-color: rgba(186, 218, 255, 0.24);
+}
+
+.theme-night .widget-edit-label,
+.theme-night .widget-empty-title,
+.theme-night .widget-preview-title,
+.theme-night .widget-gallery-title,
+.theme-night .widget-gallery-card-name {
+  color: #f1f6fc;
+}
+
+.theme-night .widget-empty-sub,
+.theme-night .widget-preview-desc,
+.theme-night .widget-gallery-sub,
+.theme-night .widget-gallery-card-desc {
+  color: #c2d6eb;
+}
+
+.theme-night .widget-gallery-group-title {
+  color: #9fd0ff;
+}
+
+.theme-night .widget-edit-btn {
+  background: rgba(28, 50, 84, 0.82);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #eaf3fc;
+}
+
+.theme-night .widget-edit-btn--danger {
+  background: rgba(112, 34, 38, 0.82);
+  border-color: rgba(255, 184, 184, 0.3);
+  color: #ffb8b8;
+}
+
+.theme-night .widget-gallery-card {
+  background: rgba(18, 34, 60, 0.72);
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .widget-count-badge {
+  background: rgba(96, 168, 232, 0.24);
+  color: #bfe0ff;
+}
+
+.theme-night .widget-gallery-btn--active {
+  background: rgba(24, 74, 50, 0.8);
+  border-color: rgba(155, 231, 188, 0.3);
+  color: #a6f0c4;
+}
+
+/* Mobile (< 768px): 1-column stack + hide width toggle (F7) */
+@media (max-width: 767px) {
+  .bento-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .widget-btn-resize {
+    display: none;
+  }
+
+  .widget-gallery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .widget-gallery-modal {
+    padding: 18px 16px;
+  }
+}
