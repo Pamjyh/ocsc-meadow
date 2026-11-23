@@ -27,7 +27,15 @@ export function TopNav({
           className="top-nav-brand"
           onClick={() => onNavigate({ name: 'dashboard' })}
         >
-          <LiquidGlassIcon name="meadow" tone="meadow" size="sm" shape="circle" />
+          <span className="top-nav-avatar-wrap">
+            <img
+              src="./app-icon.jpg"
+              alt={siteTitle}
+              className="top-nav-avatar"
+              width={32}
+              height={32}
+            />
+          </span>
           <span>{siteTitle}</span>
         </button>
 
