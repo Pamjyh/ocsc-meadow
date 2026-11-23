@@ -113,7 +113,7 @@ void main() {
   float aboveHorizon = 1.0 - smoothstep(horizonY - 0.10, horizonY + 0.06, uv.y);
   float blueDominance = smoothstep(-0.04, 0.14, baseCol.b - max(baseCol.r, baseCol.g) * 0.85);
   float brightCloud = smoothstep(0.68, 0.92, (baseCol.r + baseCol.g + baseCol.b) / 3.0);
-  float skyMask = aboveHorizon * clamp(blueDominance + brightCloud * 0.85, 0.35, 1.0);
+  float skyMask = aboveHorizon * clamp(blueDominance + brightCloud * 0.90, 0.0, 1.0);
 
   // Continuous 24-hour palette (matches meadowShader.ts)
   vec3 skyZenith = sampleCycle(
@@ -195,8 +195,8 @@ void main() {
   vec3 groundCol = baseCol * groundTint;
   vec3 finalRgb = mix(groundCol, gradedSky, skyMask);
 
-  // Night fireflies drifting softly over lower ground/foliage
-  if (nightStrength > 0.12 && uv.y > horizonY + 0.10) {
+  // Night fireflies drifting softly over meadow/garden foliage (skip high-altitude cloud sea Mode 2) (F64)
+  if (nightStrength > 0.12 && uv.y > horizonY + 0.10 && (uMode < 1.5 || uMode > 2.5)) {
     vec2 ffGrid = uv * vec2(18.0, 10.0);
     vec2 ffCell = floor(ffGrid);
     float r = hash21(ffCell + vec2(11.7, 3.3));
