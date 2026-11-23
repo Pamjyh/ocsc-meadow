@@ -70,6 +70,7 @@ export function MeadowScene({
       mountLivingSceneShader(
         canvas,
         scene.previewUrl,
+        './meadow-clouds.webp',
         scene.shaderMode,
         shouldPause,
         hourFloat,

@@ -1,9 +1,10 @@
 /**
  * Zero-dependency WebGL 24-hour living-scene renderer for all 4 scenic backgrounds:
- * Mirrors meadowShader.ts with the same C1-continuous 6-keyframe 24-hour atmosphere
- * (Midnight -> Pre-Dawn -> Golden Morning -> Cerulean Day -> Golden Sunset -> Twilight),
- * continuous Sun/Moon orbital arcs, twinkling night stars, night fireflies,
- * and scene-tailored organic foliage/cloud breeze motion.
+ * Mirrors meadowShader.ts with:
+ * - C1-continuous 6-keyframe 24-hour atmosphere (Midnight -> Pre-Dawn -> Morning -> Day -> Sunset -> Twilight)
+ * - Real painted drifting clouds (meadow-clouds.webp) smoothly tinted by the 24h cycle
+ * - Continuous Sun/Moon orbital arcs, twinkling night stars, and night fireflies
+ * - Natural per-scene motion: coherent breeze gusts (no jelly shear), drifting cloud sea, and floating pink petals
  */
 
 const VERTEX_SHADER = `
@@ -19,6 +20,7 @@ const FRAGMENT_SHADER = `
 precision mediump float;
 
 uniform sampler2D uTex;
+uniform sampler2D uCloudTex;
 uniform float uTime;
 uniform float uHour;
 uniform float uMode;
@@ -31,6 +33,17 @@ float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
   return fract(p.x * p.y);
+}
+
+float vnoise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash21(i), hash21(i + vec2(1.0, 0.0)), u.x),
+    mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), u.x),
+    u.y
+  );
 }
 
 vec2 coverUv(vec2 uv, vec2 canvasSize, vec2 imgSize) {
@@ -73,43 +86,52 @@ void main() {
   float h = mod(uHour, 24.0);
   float aspect = uImgSize.x / max(uImgSize.y, 1.0);
 
-  // Per-scene horizon & organic wind motion
+  // Per-scene horizon & natural coherent wind motion
   float horizonY = 0.45;
   vec2 sampleUv = uv;
 
   if (uMode < 1.5) {
-    // Scene 1: Blue wildflower meadow
+    // Scene 1: Blue wildflower meadow (gentle coherent wind wave across flower stems)
     horizonY = 0.41;
-    float flowerMask = smoothstep(0.42, 0.78, uv.y);
-    float swayX = sin(uv.x * 9.5 - uTime * 1.2 + uv.y * 3.0) * 0.0028 * flowerMask;
-    float swayY = cos(uv.x * 6.0 - uTime * 0.9) * 0.0010 * flowerMask;
+    float flowerMask = smoothstep(0.45, 0.80, uv.y);
+    float gust = sin(uv.x * 4.5 - uTime * 1.15) * 0.65 + sin(uv.x * 8.5 - uTime * 1.65) * 0.35;
+    float swayX = gust * 0.0024 * flowerMask;
+    float swayY = cos(uv.x * 4.5 - uTime * 1.15) * 0.0007 * flowerMask;
     sampleUv = clamp(uv + vec2(swayX, swayY), 0.001, 0.999);
   } else if (uMode < 2.5) {
     // Scene 2: Sea of clouds above river valley
+    // Keep the valley crisp; gently breathe only the bright foreground cloud puffs
     horizonY = 0.46;
-    float cloudMask = smoothstep(0.44, 0.70, uv.y);
-    float driftX = sin(uv.y * 10.0 + uTime * 0.45) * 0.0024 * cloudMask;
-    float breatheY = cos(uv.x * 4.0 - uTime * 0.4) * 0.0010 * cloudMask;
-    sampleUv = clamp(uv + vec2(driftX, breatheY), 0.001, 0.999);
+    vec3 probe = texture2D(uTex, uv).rgb;
+    float isCloudPuff = smoothstep(0.68, 0.86, (probe.r + probe.g + probe.b) / 3.0) * smoothstep(0.42, 0.62, uv.y);
+    float puffDrift = sin(uv.x * 3.0 - uTime * 0.55) * 0.0042 * isCloudPuff;
+    float puffLift = cos(uv.x * 2.4 - uTime * 0.42) * 0.0018 * isCloudPuff;
+    sampleUv = clamp(uv + vec2(puffDrift, puffLift), 0.001, 0.999);
   } else if (uMode < 3.5) {
-    // Scene 3: Pink rhododendron flower garden (upper-center sky gap)
+    // Scene 3: Pink rhododendron hillside garden
+    // Coherent, ultra-gentle branch breeze on left/right foliage only (zero jelly shear, dirt path stays 100% still)
     horizonY = mix(0.28, 0.48, exp(-pow((uv.x - 0.50) * 3.0, 2.0)));
-    float bushMask = smoothstep(horizonY - 0.02, horizonY + 0.14, uv.y);
-    float swayX = sin(uv.y * 8.5 + uTime * 1.15 + uv.x * 4.0) * 0.0026 * bushMask;
-    float swayY = cos(uv.x * 6.5 + uTime * 0.85) * 0.0011 * bushMask;
+    float sideFoliage = smoothstep(0.10, 0.34, abs(uv.x - 0.55));
+    float pathExclusion = 1.0 - smoothstep(0.66, 0.84, uv.y) * (1.0 - smoothstep(0.06, 0.22, abs(uv.x - 0.56)));
+    float upperCanopy = smoothstep(0.96, 0.35, uv.y) * smoothstep(0.08, 0.26, uv.y);
+    float branchMask = sideFoliage * pathExclusion * upperCanopy;
+    float breeze = sin(uTime * 0.85 + uv.x * 2.1) * 0.7 + sin(uTime * 1.35 - uv.x * 1.4) * 0.3;
+    float swayX = breeze * 0.0013 * branchMask;
+    float swayY = cos(uTime * 0.85 + uv.x * 2.1) * 0.0004 * branchMask;
     sampleUv = clamp(uv + vec2(swayX, swayY), 0.001, 0.999);
   } else {
-    // Scene 4: Hilltop meadow overlooking lake & big cumulus clouds
+    // Scene 4: Hilltop meadow overlooking lake & cumulus clouds
     horizonY = 0.60;
     float grassMask = smoothstep(0.66, 0.86, uv.y);
-    float grassSway = sin(uv.x * 13.0 - uTime * 1.35) * 0.0030 * grassMask;
-    float grassY = cos(uv.x * 7.5 - uTime * 1.0) * 0.0010 * grassMask;
+    float gust = sin(uv.x * 6.0 - uTime * 1.35) * 0.7 + sin(uv.x * 11.0 - uTime * 1.9) * 0.3;
+    float grassSway = gust * 0.0028 * grassMask;
+    float grassY = cos(uv.x * 6.0 - uTime * 1.1) * 0.0008 * grassMask;
     sampleUv = clamp(uv + vec2(grassSway, grassY), 0.001, 0.999);
   }
 
   vec3 baseCol = texture2D(uTex, sampleUv).rgb;
 
-  // Detect sky pixels smoothly using horizon + sky-blue/bright-cloud luminance heuristic
+  // Detect sky pixels smoothly using horizon + sky-blue/bright-cloud luminance heuristic (F63)
   float aboveHorizon = 1.0 - smoothstep(horizonY - 0.10, horizonY + 0.06, uv.y);
   float blueDominance = smoothstep(-0.04, 0.14, baseCol.b - max(baseCol.r, baseCol.g) * 0.85);
   float brightCloud = smoothstep(0.68, 0.92, (baseCol.r + baseCol.g + baseCol.b) / 3.0);
@@ -145,6 +167,16 @@ void main() {
     vec3(1.08, 0.80, 0.64),
     vec3(0.44, 0.48, 0.66)
   );
+  vec3 cloudTint = sampleCycle(
+    h,
+    vec3(0.24, 0.34, 0.54),
+    vec3(0.74, 0.60, 0.68),
+    vec3(1.05, 0.93, 0.86),
+    vec3(1.00, 1.00, 1.00),
+    vec3(1.10, 0.74, 0.58),
+    vec3(0.40, 0.44, 0.66)
+  );
+  float cloudAlphaScale = sampleCycle1(h, 0.68, 0.82, 0.96, 1.0, 0.98, 0.78);
   float nightStrength = sampleCycle1(h, 1.0, 0.55, 0.0, 0.0, 0.05, 0.82);
 
   // Grade sky while preserving painted cloud shading
@@ -194,6 +226,63 @@ void main() {
 
   vec3 groundCol = baseCol * groundTint;
   vec3 finalRgb = mix(groundCol, gradedSky, skyMask);
+
+  // Drifting painted cumulus clouds (uCloudTex) smoothly tinted by 24h cycle
+  if (uMode > 1.5 && uMode < 2.5) {
+    // Scene 2 (Sea of Clouds): 2 lush gliding cloud layers across sky + drifting sea mist over lower clouds
+    float upperBand = smoothstep(0.56, 0.36, uv.y);
+    if (upperBand > 0.005) {
+      float cy = clamp(uv.y / 0.54, 0.002, 0.998);
+      float d1 = fract(uv.x - uTime * 0.013);
+      float d2 = fract(uv.x * 0.85 + 0.48 - uTime * 0.0075);
+      vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
+      vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.08 + 0.04, 0.002, 0.998)));
+      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.42 * upperBand * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.68 * upperBand * cloudAlphaScale);
+    }
+
+    // Soft drifting mist wisps gliding continuously over the lower sea of clouds
+    if (uv.y > 0.38) {
+      float seaBand = smoothstep(0.38, 0.58, uv.y);
+      float mist1 = vnoise(vec2(uv.x * 4.5 - uTime * 0.16, uv.y * 5.0));
+      float mist2 = vnoise(vec2(uv.x * 8.0 - uTime * 0.24 + 3.1, uv.y * 7.5 + 1.4));
+      float mist = smoothstep(0.46, 0.84, mist1 * 0.6 + mist2 * 0.4) * seaBand;
+      vec3 mistCol = vec3(0.98, 0.99, 1.0) * cloudTint;
+      finalRgb = mix(finalRgb, mistCol, mist * 0.24 * cloudAlphaScale);
+    }
+  } else {
+    // Scenes 1, 3, 4: subtle real painted clouds drifting inside skyMask only
+    float skyCloudRange = max(horizonY + 0.04, 0.36);
+    if (uv.y < skyCloudRange && skyMask > 0.02) {
+      float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
+      float drift = fract(uv.x - uTime * 0.0085);
+      vec4 c = texture2D(uCloudTex, vec2(drift, cy));
+      float strength = uMode > 2.5 && uMode < 3.5 ? 0.34 : 0.26;
+      finalRgb = mix(finalRgb, c.rgb * cloudTint, c.a * strength * skyMask * cloudAlphaScale);
+    }
+  }
+
+  // Scene 3 (Pink Garden): delicate floating pink blossom petals drifting in the breeze
+  if (uMode > 2.5 && uMode < 3.5) {
+    vec2 pGrid = uv * vec2(9.0, 5.5) + vec2(-uTime * 0.18, -uTime * 0.10);
+    vec2 pCell = floor(pGrid);
+    float r = hash21(pCell + vec2(4.3, 8.7));
+    if (r > 0.78) {
+      vec2 center = vec2(
+        0.5 + 0.28 * sin(uTime * (0.9 + r * 0.5) + r * 19.0),
+        0.5 + 0.26 * cos(uTime * (0.7 + r * 0.4) + r * 13.0)
+      );
+      vec2 d = fract(pGrid) - center;
+      // Rotate petal gently as it drifts
+      float ang = uTime * (1.2 + r) + r * 6.28;
+      float ca = cos(ang);
+      float sa = sin(ang);
+      vec2 rd = vec2(d.x * ca - d.y * sa, (d.x * sa + d.y * ca) * 1.9);
+      float petal = smoothstep(0.11, 0.025, length(rd));
+      vec3 petalCol = vec3(1.0, 0.78, 0.86) * mix(groundTint, vec3(1.0), 0.35);
+      finalRgb = mix(finalRgb, petalCol, petal * 0.65);
+    }
+  }
 
   // Night fireflies drifting softly over meadow/garden foliage (skip high-altitude cloud sea Mode 2) (F64)
   if (nightStrength > 0.12 && uv.y > horizonY + 0.10 && (uMode < 1.5 || uMode > 2.5)) {
@@ -273,6 +362,7 @@ export interface LivingSceneHandle {
 export async function mountLivingSceneShader(
   canvas: HTMLCanvasElement,
   imageUrl: string,
+  cloudsUrl: string,
   shaderMode: 1 | 2 | 3 | 4,
   initialPaused: boolean,
   initialHour: number,
@@ -309,8 +399,12 @@ export async function mountLivingSceneShader(
   }
 
   let asset: { texture: WebGLTexture; width: number; height: number };
+  let cloudAsset: { texture: WebGLTexture; width: number; height: number };
   try {
-    asset = await loadTexture(gl, imageUrl);
+    [asset, cloudAsset] = await Promise.all([
+      loadTexture(gl, imageUrl),
+      loadTexture(gl, cloudsUrl),
+    ]);
   } catch {
     gl.deleteProgram(program);
     gl.deleteShader(vs);
@@ -334,6 +428,11 @@ export async function mountLivingSceneShader(
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, asset.texture);
   gl.uniform1i(gl.getUniformLocation(program, 'uTex'), 0);
+
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, cloudAsset.texture);
+  gl.uniform1i(gl.getUniformLocation(program, 'uCloudTex'), 1);
+
   gl.uniform1f(gl.getUniformLocation(program, 'uMode'), shaderMode);
   gl.uniform2f(gl.getUniformLocation(program, 'uImgSize'), asset.width, asset.height);
 
@@ -417,6 +516,7 @@ export async function mountLivingSceneShader(
       window.cancelAnimationFrame(rafId);
       window.removeEventListener('resize', onResize);
       gl.deleteTexture(asset.texture);
+      gl.deleteTexture(cloudAsset.texture);
       gl.deleteBuffer(buffer);
       gl.deleteProgram(program);
       gl.deleteShader(vs);
