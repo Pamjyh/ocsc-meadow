@@ -337,6 +337,7 @@ export async function mountLivingSceneShader(
       gl.deleteProgram(program);
       gl.deleteShader(vs);
       gl.deleteShader(fs);
+      gl.getExtension('WEBGL_lose_context')?.loseContext();
     },
   };
 }

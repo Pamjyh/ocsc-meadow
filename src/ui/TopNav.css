@@ -395,7 +395,7 @@
 
   .top-nav-scene-btn {
     min-height: 38px;
-    padding: 4px 10px 4px 5px;
+    padding: 5px;
     font-size: 0.78rem;
   }
 
@@ -403,8 +403,10 @@
     display: none;
   }
 
-  .top-nav-scene-btn {
-    padding: 5px;
+  .scene-picker-popover {
+    position: fixed;
+    top: calc(64px + env(safe-area-inset-top, 0px));
+    right: 12px;
   }
 
   .top-nav-focus-btn {

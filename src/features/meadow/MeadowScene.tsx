@@ -120,9 +120,12 @@ export function MeadowScene({
           style={{ objectPosition: scene.objectPosition }}
           decoding="async"
         />
-        {!fallbackStatic && (
-          <canvas key={sceneId} ref={canvasRef} className="meadow-canvas" />
-        )}
+        <canvas
+          key={sceneId}
+          ref={canvasRef}
+          className="meadow-canvas"
+          hidden={fallbackStatic}
+        />
       </div>
 
       <div
