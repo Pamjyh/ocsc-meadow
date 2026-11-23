@@ -1,0 +1,222 @@
+/* Ambient & Lo-fi Built-in Player Styles */
+.ambient-now-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.ambient-now-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.ambient-now-emoji {
+  font-size: 1.55rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ambient-now-text {
+  min-width: 0;
+}
+
+.ambient-now-title {
+  font-family: var(--font-display);
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #102436;
+}
+
+.ambient-now-sub {
+  font-size: 0.78rem;
+  color: #365066;
+}
+
+.ambient-transport {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ambient-ctrl-btn {
+  min-height: 36px;
+  min-width: 36px;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(20, 48, 74, 0.14);
+  background: rgba(255, 255, 255, 0.88);
+  color: #14324c;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.ambient-ctrl-btn--play {
+  padding: 6px 16px;
+  border-color: rgba(255, 255, 255, 0.48);
+  background: linear-gradient(180deg, rgba(58, 142, 206, 0.94), rgba(38, 112, 174, 0.96));
+  color: #ffffff;
+  box-shadow: 0 5px 14px rgba(32, 98, 154, 0.24);
+}
+
+.ambient-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 4px;
+}
+
+.ambient-vol-label {
+  font-size: 1rem;
+}
+
+.ambient-vol-slider {
+  flex: 1;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.ambient-vol-pct {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #365066;
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ambient-track-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ambient-track-chip {
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.66);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: transform 180ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.ambient-track-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.ambient-track-chip--active {
+  border-color: rgba(58, 142, 206, 0.75);
+  background: rgba(224, 242, 255, 0.9);
+}
+
+.ambient-chip-emoji {
+  font-size: 1.2rem;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.ambient-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ambient-chip-title {
+  font-family: var(--font-display);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #102436;
+}
+
+.ambient-chip-sub {
+  font-size: 0.74rem;
+  color: #365066;
+  line-height: 1.35;
+}
+
+/* Compact Floating Ambient Dock */
+.ambient-dock-pill {
+  padding: 5px 8px 5px 14px;
+  gap: 8px;
+}
+
+.ambient-dock-btns {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ambient-dock-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.72);
+  color: #15324a;
+  font-size: 0.74rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ambient-dock-btn--main {
+  background: linear-gradient(180deg, rgba(58, 142, 206, 0.94), rgba(38, 112, 174, 0.96));
+  color: #ffffff;
+}
+
+@container (max-width: 440px) {
+  .ambient-track-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Night Mode (.theme-night) for Ambient Player */
+.theme-night .ambient-now-box,
+.theme-night .ambient-track-chip {
+  background: rgba(18, 34, 60, 0.68);
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .ambient-track-chip--active {
+  background: rgba(42, 76, 122, 0.84);
+  border-color: rgba(160, 210, 255, 0.5);
+}
+
+.theme-night .ambient-now-title,
+.theme-night .ambient-chip-title {
+  color: #f1f6fc;
+}
+
+.theme-night .ambient-now-sub,
+.theme-night .ambient-chip-sub,
+.theme-night .ambient-vol-pct {
+  color: #c2d6eb;
+}
+
+.theme-night .ambient-ctrl-btn,
+.theme-night .ambient-dock-btn {
+  background: rgba(28, 50, 84, 0.82);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #eaf3fc;
+}
+
+.theme-night .ambient-ctrl-btn--play,
+.theme-night .ambient-dock-btn--main {
+  background: linear-gradient(180deg, rgba(64, 148, 214, 0.94), rgba(40, 114, 176, 0.96));
+  color: #ffffff;
+}

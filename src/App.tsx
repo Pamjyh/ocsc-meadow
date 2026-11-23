@@ -7,6 +7,15 @@ import { ExamsHubView } from './features/exams/ExamsHubView';
 import { MeadowScene } from './features/meadow/MeadowScene';
 import { PomodoroWidget } from './features/pomodoro/PomodoroWidget';
 import { StudyView } from './features/study/StudyView';
+import { ambientEngine, type AmbientTrackId } from './features/widgets/ambientAudio';
+import { GlobalMusicDock } from './features/widgets/GlobalMusicDock';
+import {
+  getNextTrackId,
+  getPrevTrackId,
+  loadAmbientState,
+  saveAmbientState,
+} from './features/widgets/musicStore';
+import type { AmbientPlayerState } from './features/widgets/widgetTypes';
 import {
   loadCachedBootstrap,
   loadLocalProgress,
@@ -17,9 +26,6 @@ import {
 import { useHashRoute } from './services/router';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
 import { TopNav } from './ui/TopNav';
-import { GlobalMusicDock } from './features/widgets/GlobalMusicDock';
-import { loadMusicState, saveMusicState } from './features/widgets/musicStore';
-import type { MusicSavedLink, MusicState } from './features/widgets/widgetTypes';
 
 export function App() {
   const { route, navigate } = useHashRoute();
@@ -28,11 +34,14 @@ export function App() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('demo');
   const [hourFloat, setHourFloat] = useState<number>(() => getBangkokHourFloat());
   const [selectedExamMode, setSelectedExamMode] = useState<ExamMode>('timed');
-  const [music, setMusic] = useState<MusicState>(loadMusicState);
+  const [audio, setAudio] = useState<AmbientPlayerState>(loadAmbientState);
+
+  const audioRef = useRef<AmbientPlayerState>(audio);
+  audioRef.current = audio;
 
   useEffect(() => {
-    saveMusicState(music);
-  }, [music]);
+    saveAmbientState(audio);
+  }, [audio.trackId, audio.volume]);
 
   const progressRef = useRef<UserProgress>(progress);
   progressRef.current = progress;
@@ -120,6 +129,48 @@ export function App() {
     }));
   }, [updateProgress]);
 
+  // F49: Synchronous Web Audio resume/play inside user click handlers for Safari/iOS
+  const handleSelectTrack = useCallback((trackId: AmbientTrackId) => {
+    const cur = audioRef.current;
+    const ok = ambientEngine.play(trackId, cur.volume);
+    setAudio((prev) => ({ ...prev, trackId, isPlaying: ok }));
+  }, []);
+
+  const handleTogglePlay = useCallback(() => {
+    const cur = audioRef.current;
+    if (cur.isPlaying) {
+      ambientEngine.pause();
+      setAudio((prev) => ({ ...prev, isPlaying: false }));
+    } else {
+      const ok = ambientEngine.play(cur.trackId, cur.volume);
+      setAudio((prev) => ({ ...prev, isPlaying: ok }));
+    }
+  }, []);
+
+  const handlePrevTrack = useCallback(() => {
+    const cur = audioRef.current;
+    const prevId = getPrevTrackId(cur.trackId);
+    if (cur.isPlaying) {
+      ambientEngine.play(prevId, cur.volume);
+    }
+    setAudio((prev) => ({ ...prev, trackId: prevId }));
+  }, []);
+
+  const handleNextTrack = useCallback(() => {
+    const cur = audioRef.current;
+    const nextId = getNextTrackId(cur.trackId);
+    if (cur.isPlaying) {
+      ambientEngine.play(nextId, cur.volume);
+    }
+    setAudio((prev) => ({ ...prev, trackId: nextId }));
+  }, []);
+
+  const handleChangeVolume = useCallback((volume: number) => {
+    const clamped = Math.max(0, Math.min(1, volume));
+    ambientEngine.setVolume(clamped);
+    setAudio((prev) => ({ ...prev, volume: clamped }));
+  }, []);
+
   const isReadingView = route.name !== 'dashboard';
   const isNight = isDarkAtmosphere(hourFloat);
 
@@ -129,52 +180,6 @@ export function App() {
       meta.content = isNight ? '#0f1c2e' : '#5fa4d1';
     }
   }, [isNight]);
-
-  const handleSelectTrack = useCallback(
-    (track: {
-      title: string;
-      originalUrl: string;
-      embedType: 'video' | 'playlist';
-      embedId: string;
-    }) => {
-      setMusic((prev) => ({
-        ...prev,
-        ...track,
-        isOpen: true,
-        isCollapsed: false,
-      }));
-    },
-    [],
-  );
-
-  const handleSaveMusicLink = useCallback((link: MusicSavedLink) => {
-    setMusic((prev) => ({
-      ...prev,
-      savedLinks: [link, ...prev.savedLinks.filter((s) => s.embedId !== link.embedId)].slice(
-        0,
-        12,
-      ),
-    }));
-  }, []);
-
-  const handleDeleteMusicLink = useCallback((id: string) => {
-    setMusic((prev) => ({
-      ...prev,
-      savedLinks: prev.savedLinks.filter((s) => s.id !== id),
-    }));
-  }, []);
-
-  const handleOpenMusicDock = useCallback(() => {
-    setMusic((prev) => ({ ...prev, isOpen: true, isCollapsed: false }));
-  }, []);
-
-  const handleCloseMusicDock = useCallback(() => {
-    setMusic((prev) => ({ ...prev, isOpen: false }));
-  }, []);
-
-  const handleToggleMusicCollapse = useCallback(() => {
-    setMusic((prev) => ({ ...prev, isCollapsed: !prev.isCollapsed }));
-  }, []);
 
   return (
     <div className={`app-shell${isNight ? ' theme-night' : ''}`}>
@@ -201,12 +206,12 @@ export function App() {
             progress={progress}
             syncStatus={syncStatus}
             onNavigate={navigate}
-            music={music}
+            audio={audio}
             onSelectTrack={handleSelectTrack}
-            onSaveMusicLink={handleSaveMusicLink}
-            onDeleteMusicLink={handleDeleteMusicLink}
-            onOpenMusicDock={handleOpenMusicDock}
-            onCloseMusicDock={handleCloseMusicDock}
+            onTogglePlay={handleTogglePlay}
+            onPrevTrack={handlePrevTrack}
+            onNextTrack={handleNextTrack}
+            onChangeVolume={handleChangeVolume}
           />
         )}
 
@@ -244,9 +249,10 @@ export function App() {
       </main>
 
       <GlobalMusicDock
-        music={music}
-        onToggleCollapse={handleToggleMusicCollapse}
-        onClose={handleCloseMusicDock}
+        audio={audio}
+        onTogglePlay={handleTogglePlay}
+        onPrevTrack={handlePrevTrack}
+        onNextTrack={handleNextTrack}
       />
 
       <PomodoroWidget

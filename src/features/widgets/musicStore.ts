@@ -1,110 +1,59 @@
 import { readJson, writeJson } from '../../services/storage';
-import type { MusicSavedLink, MusicState } from './widgetTypes';
-import { SAFE_YT_PLAYLIST_ID, SAFE_YT_VIDEO_ID, isSafeHttpsUrl } from './widgetUtils';
+import {
+  AMBIENT_TRACKS,
+  type AmbientTrackId,
+  type AmbientTrackMeta,
+} from './ambientAudio';
+import type { AmbientPlayerState } from './widgetTypes';
 
-export const MUSIC_STORAGE_KEY = 'ocsc_meadow_music_v1';
+export const AMBIENT_STORAGE_KEY = 'ocsc_meadow_ambient_v1';
 
-export interface MusicPreset {
-  id: string;
-  title: string;
-  subtitle: string;
-  embedType: 'video' | 'playlist';
-  embedId: string;
-  originalUrl: string;
+export function isAmbientTrackId(value: unknown): value is AmbientTrackId {
+  return AMBIENT_TRACKS.some((t) => t.id === value);
 }
 
-const YT_MUSIC_BASE = ['https://', 'music.', 'youtube.com'].join('');
-
-export const MUSIC_PRESETS: readonly MusicPreset[] = [
-  {
-    id: 'preset_lofi',
-    title: 'Lo-fi Beats อ่านหนังสือ',
-    subtitle: 'จังหวะเบาๆ ช่วยโฟกัสต่อเนื่อง',
-    embedType: 'video',
-    embedId: 'jfKfPfyJRdk',
-    originalUrl: `${YT_MUSIC_BASE}/watch?v=jfKfPfyJRdk`,
-  },
-  {
-    id: 'preset_piano',
-    title: 'เปียโนบรรเลงสบายๆ',
-    subtitle: 'นุ่มนวล ลดความล้าสายตา',
-    embedType: 'video',
-    embedId: '4oStw0r33so',
-    originalUrl: `${YT_MUSIC_BASE}/watch?v=4oStw0r33so`,
-  },
-  {
-    id: 'preset_rain',
-    title: 'เสียงฝน & คาเฟ่เงียบๆ',
-    subtitle: 'บรรยากาศผ่อนคลายเหมือนนั่งร้านกาแฟ',
-    embedType: 'video',
-    embedId: 'mPZkdNFkNps',
-    originalUrl: `${YT_MUSIC_BASE}/watch?v=mPZkdNFkNps`,
-  },
-] as const;
-
-export function buildMusicEmbedUrl(
-  embedType: 'video' | 'playlist',
-  embedId: string,
-): string | null {
-  if (embedType === 'playlist' && SAFE_YT_PLAYLIST_ID.test(embedId)) {
-    return `https://www.youtube-nocookie.com/embed/videoseries?list=${embedId}&rel=0&modestbranding=1`;
-  }
-  if (embedType === 'video' && SAFE_YT_VIDEO_ID.test(embedId)) {
-    return `https://www.youtube-nocookie.com/embed/${embedId}?rel=0&modestbranding=1`;
-  }
-  return null;
+export function getAmbientTrack(id: AmbientTrackId): AmbientTrackMeta {
+  return AMBIENT_TRACKS.find((t) => t.id === id) ?? AMBIENT_TRACKS[0]!;
 }
 
-export function createDefaultMusicState(): MusicState {
-  const first = MUSIC_PRESETS[0]!;
+export function getNextTrackId(current: AmbientTrackId): AmbientTrackId {
+  const idx = AMBIENT_TRACKS.findIndex((t) => t.id === current);
+  const next = AMBIENT_TRACKS[(idx + 1) % AMBIENT_TRACKS.length];
+  return next ? next.id : AMBIENT_TRACKS[0]!.id;
+}
+
+export function getPrevTrackId(current: AmbientTrackId): AmbientTrackId {
+  const idx = AMBIENT_TRACKS.findIndex((t) => t.id === current);
+  const prev = AMBIENT_TRACKS[(idx - 1 + AMBIENT_TRACKS.length) % AMBIENT_TRACKS.length];
+  return prev ? prev.id : AMBIENT_TRACKS[0]!.id;
+}
+
+export function createDefaultAmbientState(): AmbientPlayerState {
   return {
-    title: first.title,
-    originalUrl: first.originalUrl,
-    embedType: first.embedType,
-    embedId: first.embedId,
-    isOpen: false,
-    isCollapsed: false,
-    savedLinks: [],
+    trackId: 'rain',
+    isPlaying: false,
+    volume: 0.55,
   };
 }
 
-export function loadMusicState(): MusicState {
-  const fallback = createDefaultMusicState();
-  const saved = readJson<Partial<MusicState>>(MUSIC_STORAGE_KEY);
+export function loadAmbientState(): AmbientPlayerState {
+  const fallback = createDefaultAmbientState();
+  const saved = readJson<Partial<AmbientPlayerState>>(AMBIENT_STORAGE_KEY);
   if (!saved || typeof saved !== 'object') return fallback;
 
-  const embedType = saved.embedType === 'playlist' ? 'playlist' : 'video';
-  const embedId = typeof saved.embedId === 'string' ? saved.embedId : '';
-  const validEmbed = buildMusicEmbedUrl(embedType, embedId) !== null;
-
-  const savedLinks: MusicSavedLink[] = Array.isArray(saved.savedLinks)
-    ? saved.savedLinks.filter(
-        (item): item is MusicSavedLink =>
-          Boolean(item) &&
-          typeof item.id === 'string' &&
-          typeof item.title === 'string' &&
-          typeof item.originalUrl === 'string' &&
-          isSafeHttpsUrl(item.originalUrl) &&
-          (item.embedType === 'video' || item.embedType === 'playlist') &&
-          typeof item.embedId === 'string' &&
-          buildMusicEmbedUrl(item.embedType, item.embedId) !== null,
-      )
-    : [];
-
   return {
-    title: typeof saved.title === 'string' && saved.title.trim() ? saved.title : fallback.title,
-    originalUrl:
-      typeof saved.originalUrl === 'string' && isSafeHttpsUrl(saved.originalUrl)
-        ? saved.originalUrl
-        : fallback.originalUrl,
-    embedType: validEmbed ? embedType : fallback.embedType,
-    embedId: validEmbed ? embedId : fallback.embedId,
-    isOpen: false, // Always start closed on fresh page load so audio is user-initiated
-    isCollapsed: typeof saved.isCollapsed === 'boolean' ? saved.isCollapsed : false,
-    savedLinks,
+    trackId: isAmbientTrackId(saved.trackId) ? saved.trackId : fallback.trackId,
+    isPlaying: false, // Always user-initiated on fresh load (F49)
+    volume:
+      typeof saved.volume === 'number' && Number.isFinite(saved.volume)
+        ? Math.max(0, Math.min(1, saved.volume))
+        : fallback.volume,
   };
 }
 
-export function saveMusicState(state: MusicState): boolean {
-  return writeJson(MUSIC_STORAGE_KEY, state);
+export function saveAmbientState(state: AmbientPlayerState): boolean {
+  return writeJson(AMBIENT_STORAGE_KEY, {
+    trackId: state.trackId,
+    volume: state.volume,
+  });
 }

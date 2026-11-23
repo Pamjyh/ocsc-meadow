@@ -12,14 +12,15 @@ import {
   type GlassIconName,
   type GlassIconTone,
 } from '../../ui/LiquidGlassIcon';
+import type { AmbientTrackId } from '../widgets/ambientAudio';
 import { AestheticClockCard } from '../widgets/cards/AestheticClockCard';
+import { AmbientPlayerCard } from '../widgets/cards/AmbientPlayerCard';
 import { DailyGoalsCard } from '../widgets/cards/DailyGoalsCard';
 import { PhotoCollectionCard } from '../widgets/cards/PhotoCollectionCard';
 import { QuickStudyCard } from '../widgets/cards/QuickStudyCard';
 import { StickyNoteCard } from '../widgets/cards/StickyNoteCard';
-import { YouTubeMusicCard } from '../widgets/cards/YouTubeMusicCard';
+import { FreeformWidgetGrid } from '../widgets/FreeformWidgetGrid';
 import { WidgetGalleryModal } from '../widgets/WidgetGalleryModal';
-import { WidgetShell } from '../widgets/WidgetShell';
 import {
   addWidget,
   createDefaultWidgetLayout,
@@ -29,10 +30,11 @@ import {
   saveWidgetLayout,
   toggleWidgetSize,
   updateWidgetConfig,
+  updateWidgetGrid,
 } from '../widgets/widgetStore';
 import {
-  type MusicSavedLink,
-  type MusicState,
+  type AmbientPlayerState,
+  type WidgetGridRect,
   type WidgetItem,
   type WidgetLayoutState,
   type WidgetType,
@@ -46,17 +48,12 @@ interface DashboardViewProps {
   progress: UserProgress;
   syncStatus: SyncStatus;
   onNavigate: (route: AppRoute) => void;
-  music: MusicState;
-  onSelectTrack: (track: {
-    title: string;
-    originalUrl: string;
-    embedType: 'video' | 'playlist';
-    embedId: string;
-  }) => void;
-  onSaveMusicLink: (link: MusicSavedLink) => void;
-  onDeleteMusicLink: (id: string) => void;
-  onOpenMusicDock: () => void;
-  onCloseMusicDock: () => void;
+  audio: AmbientPlayerState;
+  onSelectTrack: (trackId: AmbientTrackId) => void;
+  onTogglePlay: () => void;
+  onPrevTrack: () => void;
+  onNextTrack: () => void;
+  onChangeVolume: (volume: number) => void;
 }
 
 const SYNC_LABELS: Record<SyncStatus, string> = {
@@ -95,12 +92,12 @@ export function DashboardView({
   progress,
   syncStatus,
   onNavigate,
-  music,
+  audio,
   onSelectTrack,
-  onSaveMusicLink,
-  onDeleteMusicLink,
-  onOpenMusicDock,
-  onCloseMusicDock,
+  onTogglePlay,
+  onPrevTrack,
+  onNextTrack,
+  onChangeVolume,
 }: DashboardViewProps) {
   const { config, subjects, studyItems, pdfExams } = bootstrap;
 
@@ -121,6 +118,13 @@ export function DashboardView({
     setLayout((prev) => ({
       ...prev,
       items: moveWidget(prev.items, id, dir),
+    }));
+  }, []);
+
+  const handleCommitGrid = useCallback((id: string, nextGrid: WidgetGridRect) => {
+    setLayout((prev) => ({
+      ...prev,
+      items: updateWidgetGrid(prev.items, id, nextGrid),
     }));
   }, []);
 
@@ -375,13 +379,13 @@ export function DashboardView({
 
       case 'ytm_player':
         return (
-          <YouTubeMusicCard
-            music={music}
+          <AmbientPlayerCard
+            audio={audio}
             onSelectTrack={onSelectTrack}
-            onSaveLink={onSaveMusicLink}
-            onDeleteSavedLink={onDeleteMusicLink}
-            onOpenDock={onOpenMusicDock}
-            onCloseDock={onCloseMusicDock}
+            onTogglePlay={onTogglePlay}
+            onPrevTrack={onPrevTrack}
+            onNextTrack={onNextTrack}
+            onChangeVolume={onChangeVolume}
           />
         );
 
@@ -433,6 +437,9 @@ export function DashboardView({
       <div className="dash-toolbar">
         {editMode ? (
           <>
+            <span className="dash-edit-hint">
+              ⠿ ลากแถบหัวการ์ดเพื่อย้ายอิสระ · ดึงมุมขวาล่าง ↘ เพื่อปรับขนาด
+            </span>
             <button
               type="button"
               className="widget-pill-btn widget-pill-btn--primary"
@@ -466,8 +473,8 @@ export function DashboardView({
         )}
       </div>
 
-      <div className="bento-grid">
-        {visibleItems.length === 0 ? (
+      {visibleItems.length === 0 ? (
+        <div className="bento-grid">
           <div className="glass-card widget-empty-card">
             <div className="widget-empty-title">หน้าแรกโล่งสบายตา</div>
             <p className="widget-empty-sub">
@@ -490,23 +497,18 @@ export function DashboardView({
               </button>
             </div>
           </div>
-        ) : (
-          visibleItems.map((item, idx) => (
-            <WidgetShell
-              key={item.id}
-              item={item}
-              editMode={editMode}
-              canMoveUp={idx > 0}
-              canMoveDown={idx < visibleItems.length - 1}
-              onMove={handleMove}
-              onToggleSize={handleToggleSize}
-              onRemove={handleRemove}
-            >
-              {renderWidget(item)}
-            </WidgetShell>
-          ))
-        )}
-      </div>
+        </div>
+      ) : (
+        <FreeformWidgetGrid
+          items={visibleItems}
+          editMode={editMode}
+          onCommitGrid={handleCommitGrid}
+          onMove={handleMove}
+          onToggleSize={handleToggleSize}
+          onRemove={handleRemove}
+          renderWidget={renderWidget}
+        />
+      )}
 
       <WidgetGalleryModal
         open={galleryOpen}

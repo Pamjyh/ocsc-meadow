@@ -1,3 +1,5 @@
+import type { AmbientTrackId } from './ambientAudio';
+
 export type CoreWidgetType =
   | 'core_welcome'
   | 'core_countdown'
@@ -20,35 +22,31 @@ export type StickyColor = 'yellow' | 'peach' | 'mint' | 'lavender';
 
 export type WidgetGroup = 'core' | 'cozy' | 'study';
 
+export interface WidgetGridRect {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface WidgetItem {
   id: string;
   type: WidgetType;
   visible: boolean;
   size: WidgetSize;
+  grid: WidgetGridRect;
   config: Record<string, unknown>;
 }
 
 export interface WidgetLayoutState {
-  version: 1;
+  version: 2;
   items: WidgetItem[];
 }
 
-export interface MusicSavedLink {
-  id: string;
-  title: string;
-  originalUrl: string;
-  embedType: 'video' | 'playlist';
-  embedId: string;
-}
-
-export interface MusicState {
-  title: string;
-  originalUrl: string;
-  embedType: 'video' | 'playlist';
-  embedId: string;
-  isOpen: boolean;
-  isCollapsed: boolean;
-  savedLinks: MusicSavedLink[];
+export interface AmbientPlayerState {
+  trackId: AmbientTrackId;
+  isPlaying: boolean;
+  volume: number;
 }
 
 export interface WidgetCatalogMeta {
@@ -61,8 +59,16 @@ export interface WidgetCatalogMeta {
   multiInstance: boolean;
   defaultVisible: boolean;
   defaultSize: WidgetSize;
+  defaultGrid: WidgetGridRect;
+  minW: number;
+  minH: number;
   defaultConfig: Record<string, unknown>;
 }
+
+export const GRID_COLS = 12;
+export const GRID_ROW_HEIGHT = 46;
+export const GRID_GAP = 16;
+export const GRID_MAX_H = 18;
 
 export const CORE_WIDGET_TYPES: readonly CoreWidgetType[] = [
   'core_welcome',
@@ -82,6 +88,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: true,
     defaultSize: 'half',
+    defaultGrid: { x: 0, y: 0, w: 6, h: 5 },
+    minW: 4,
+    minH: 4,
     defaultConfig: {},
   },
   {
@@ -94,6 +103,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: true,
     defaultSize: 'half',
+    defaultGrid: { x: 6, y: 0, w: 6, h: 5 },
+    minW: 4,
+    minH: 4,
     defaultConfig: {},
   },
   {
@@ -106,6 +118,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: true,
     defaultSize: 'full',
+    defaultGrid: { x: 0, y: 5, w: 12, h: 5 },
+    minW: 5,
+    minH: 4,
     defaultConfig: {},
   },
   {
@@ -118,18 +133,24 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: true,
     defaultSize: 'full',
+    defaultGrid: { x: 0, y: 10, w: 12, h: 4 },
+    minW: 4,
+    minH: 4,
     defaultConfig: {},
   },
   {
     type: 'ytm_player',
-    title: 'YouTube Music',
-    description: 'วางลิงก์เพลงหรือเพลย์ลิสต์ YouTube Music เปิดฟังคลอต่อเนื่องได้ทุกหน้า',
-    emoji: '🎵',
+    title: 'เสียงอ่านหนังสือ & Lo-fi',
+    description: 'เสียงฝนตกเบาๆ Lo-fi ลมทุ่งหญ้า และโทนโฟกัส ฝังในเว็บเล่นต่อเนื่องทุกหน้า',
+    emoji: '🎧',
     group: 'cozy',
     isCore: false,
     multiInstance: false,
     defaultVisible: true,
     defaultSize: 'half',
+    defaultGrid: { x: 0, y: 14, w: 6, h: 6 },
+    minW: 4,
+    minH: 5,
     defaultConfig: {},
   },
   {
@@ -142,6 +163,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: true,
     defaultSize: 'half',
+    defaultGrid: { x: 6, y: 14, w: 6, h: 6 },
+    minW: 4,
+    minH: 5,
     defaultConfig: {
       autoPlay: true,
       intervalSec: 6,
@@ -157,6 +181,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: true,
     defaultVisible: true,
     defaultSize: 'half',
+    defaultGrid: { x: 0, y: 20, w: 6, h: 5 },
+    minW: 3,
+    minH: 4,
     defaultConfig: {
       title: 'กำลังใจวันนี้',
       text: 'ค่อยๆ เก็บวันละนิด เดี๋ยวก็ครบทุกวิชา สู้ๆ นะครับ!',
@@ -173,6 +200,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: false,
     defaultSize: 'half',
+    defaultGrid: { x: 6, y: 20, w: 6, h: 5 },
+    minW: 3,
+    minH: 4,
     defaultConfig: {
       customQuote: 'หายใจลึกๆ แล้วค่อยๆ ไปทีละก้าว',
     },
@@ -187,6 +217,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: false,
     defaultSize: 'half',
+    defaultGrid: { x: 0, y: 25, w: 6, h: 5 },
+    minW: 4,
+    minH: 5,
     defaultConfig: {
       lastDate: '',
       tasks: [
@@ -206,6 +239,9 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: false,
     defaultSize: 'full',
+    defaultGrid: { x: 0, y: 30, w: 12, h: 7 },
+    minW: 5,
+    minH: 6,
     defaultConfig: {},
   },
 ] as const;
