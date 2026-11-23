@@ -1,0 +1,71 @@
+:root {
+  /* Palette extracted from ref.jpg & bespoke meadow backdrop */
+  --sky-top: #4e92bf;
+  --sky-mid: #7db9dc;
+  --sky-horizon: #cbe5f2;
+
+  --cloud-highlight: #fffbf5;
+  --cloud-shadow: #c2d4e3;
+
+  --meadow-sun: #7cb842;
+  --meadow-mid: #5b9632;
+  --meadow-deep: #3f6f24;
+
+  --flower-poppy: #e35b54;
+  --flower-marigold: #f0b742;
+  --flower-daisy: #faf9f6;
+  --flower-lavender: #b9b2e3;
+
+  /* Surfaces */
+  --surface-glass: rgba(255, 252, 245, 0.88);
+  --surface-glass-strong: rgba(255, 252, 245, 0.94);
+  --surface-glass-border: rgba(255, 255, 255, 0.72);
+  --surface-paper: #faf8f3;
+  --surface-paper-veil: rgba(250, 248, 243, 0.94);
+  --surface-card: #ffffff;
+  --surface-subtle: #f2efe7;
+
+  /* Text */
+  --text-primary: #1f2933;
+  --text-secondary: #52606d;
+  --text-muted: #7b8794;
+
+  /* Semantic Status */
+  --status-pass: #2e7d52;
+  --status-pass-bg: #e8f5ee;
+  --status-fail: #c64343;
+  --status-fail-bg: #fdeeee;
+  --status-warn: #c87d20;
+  --status-warn-bg: #fef6e8;
+
+  /* Brand Accent */
+  --accent-primary: #3b82b6;
+  --accent-primary-hover: #2f6c9a;
+  --accent-meadow: #4e8c30;
+
+  /* Typography */
+  --font-display: 'Prompt', 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Radii & Shadows */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
+
+  --shadow-soft: 0 8px 30px rgba(31, 41, 51, 0.08);
+  --shadow-card: 0 4px 16px rgba(31, 41, 51, 0.06);
+  --shadow-float: 0 12px 32px rgba(31, 41, 51, 0.14);
+
+  /* Layout */
+  --nav-height: 64px;
+  --content-max-width: 1200px;
+
+  /* Z-index scale */
+  --z-backdrop: 0;
+  --z-veil: 1;
+  --z-content: 10;
+  --z-nav: 30;
+  --z-floating: 40;
+  --z-modal: 50;
+}

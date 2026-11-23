@@ -1,0 +1,100 @@
+@keyframes cloud-drift-slow {
+  0% {
+    transform: translate3d(-12%, 0, 0);
+  }
+  100% {
+    transform: translate3d(112%, 0, 0);
+  }
+}
+
+@keyframes cloud-drift-mid {
+  0% {
+    transform: translate3d(-20%, 0, 0);
+  }
+  100% {
+    transform: translate3d(115%, 0, 0);
+  }
+}
+
+@keyframes bird-glide {
+  0% {
+    transform: translate3d(-10vw, 4px, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(24vw, -10px, 0);
+    opacity: 0.85;
+  }
+  90% {
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate3d(58vw, -4px, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes flower-sway {
+  0%,
+  100% {
+    transform: rotate(-3.2deg);
+  }
+  50% {
+    transform: rotate(3.6deg);
+  }
+}
+
+@keyframes flower-sway-gentle {
+  0%,
+  100% {
+    transform: rotate(2.4deg);
+  }
+  50% {
+    transform: rotate(-2.8deg);
+  }
+}
+
+@keyframes butterfly-float-a {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-4deg);
+  }
+  25% {
+    transform: translate3d(38px, -22px, 0) rotate(6deg);
+  }
+  50% {
+    transform: translate3d(72px, -6px, 0) rotate(-3deg);
+  }
+  75% {
+    transform: translate3d(26px, 14px, 0) rotate(5deg);
+  }
+}
+
+@keyframes butterfly-float-b {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(5deg);
+  }
+  33% {
+    transform: translate3d(-44px, -18px, 0) rotate(-6deg);
+  }
+  66% {
+    transform: translate3d(-18px, 12px, 0) rotate(4deg);
+  }
+}
+
+/* Pause all decorative motion in Focus Mode or when OS requests reduced motion */
+.meadow-paused *,
+.meadow-paused *::before,
+.meadow-paused *::after {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meadow-scene * {
+    animation: none !important;
+  }
+}

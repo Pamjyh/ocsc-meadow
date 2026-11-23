@@ -1,0 +1,195 @@
+/* Smooth 700ms dissolve between Light and Dark Liquid Glass */
+.glass-card,
+.top-nav-inner,
+.top-nav-links,
+.top-nav-link,
+.top-nav-focus-btn,
+.dash-time-box,
+.dash-official-item,
+.dash-pill,
+.dash-btn-secondary,
+.dash-mini-btn,
+.pomo-fab,
+.pomo-panel,
+.dash-greeting,
+.dash-encourage,
+.dash-section-title,
+.dash-subject-title,
+.dash-time-num,
+.dash-official-name {
+  transition:
+    background-color 600ms ease,
+    border-color 600ms ease,
+    color 500ms ease,
+    box-shadow 600ms ease,
+    transform 240ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Adaptive Apple Dark Liquid Glass when twilight/night atmosphere is active (18:36 - 05:36) */
+.theme-night .glass-card {
+  background: linear-gradient(
+    145deg,
+    rgba(16, 30, 54, 0.56) 0%,
+    rgba(11, 22, 42, 0.44) 60%,
+    rgba(20, 36, 62, 0.50) 100%
+  );
+  border-color: rgba(186, 218, 255, 0.24);
+  box-shadow:
+    0 16px 40px rgba(4, 10, 24, 0.45),
+    inset 0 1.5px 0 rgba(210, 232, 255, 0.30),
+    inset 0 -1.5px 3px rgba(0, 0, 0, 0.32);
+}
+
+.theme-night .glass-card::before {
+  background:
+    radial-gradient(
+      360px circle at var(--mx, 20%) var(--my, 12%),
+      rgba(180, 218, 255, 0.18) 0%,
+      rgba(150, 198, 255, 0.05) 45%,
+      rgba(255, 255, 255, 0) 72%
+    ),
+    linear-gradient(180deg, rgba(190, 222, 255, 0.14) 0%, rgba(255, 255, 255, 0) 30%);
+}
+
+.theme-night h1,
+.theme-night h2,
+.theme-night h3,
+.theme-night .dash-greeting,
+.theme-night .dash-section-title,
+.theme-night .dash-subject-title,
+.theme-night .dash-time-num,
+.theme-night .dash-official-name,
+.theme-night .top-nav-brand,
+.theme-night .pomo-title,
+.theme-night .pomo-clock {
+  color: #f1f6fc;
+  text-shadow: 0 1px 10px rgba(6, 14, 28, 0.55);
+}
+
+.theme-night .dash-encourage,
+.theme-night .dash-countdown-label,
+.theme-night .dash-section-sub,
+.theme-night .dash-official-meta,
+.theme-night .dash-subject-stats,
+.theme-night .dash-time-unit,
+.theme-night .pomo-footer {
+  color: #bfd2e8;
+}
+
+.theme-night .dash-countdown-date {
+  color: #9ed2ff;
+}
+
+.theme-night .dash-time-box,
+.theme-night .dash-official-item {
+  background: rgba(18, 34, 60, 0.62);
+  border-color: rgba(186, 218, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.18);
+}
+
+.theme-night .dash-pill {
+  background: rgba(24, 44, 76, 0.70);
+  border-color: rgba(186, 218, 255, 0.24);
+  color: #cde4ff;
+  box-shadow: none;
+}
+
+.theme-night .dash-pill--sync {
+  background: rgba(24, 68, 48, 0.72);
+  color: #9be7bc;
+}
+
+.theme-night .dash-btn-secondary,
+.theme-night .dash-mini-btn,
+.theme-night .pomo-secondary-btn,
+.theme-night .pomo-preset-btn,
+.theme-night .pomo-step-btn,
+.theme-night .pomo-icon-btn {
+  background: rgba(24, 44, 76, 0.66);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #e6f0fa;
+  box-shadow: inset 0 1px 0 rgba(210, 232, 255, 0.2);
+}
+
+.theme-night .dash-btn-secondary:hover,
+.theme-night .dash-mini-btn:hover,
+.theme-night .pomo-preset-btn--active {
+  background: rgba(42, 72, 118, 0.86);
+  color: #ffffff;
+}
+
+.theme-night .dash-status-tag--passed {
+  background: rgba(26, 86, 54, 0.78);
+  color: #a6f0c4;
+  border-color: rgba(166, 240, 196, 0.28);
+}
+
+.theme-night .dash-status-tag--needs_work {
+  background: rgba(112, 34, 38, 0.8);
+  color: #ffb8b8;
+  border-color: rgba(255, 184, 184, 0.26);
+}
+
+.theme-night .dash-status-tag--not_started {
+  background: rgba(34, 52, 82, 0.76);
+  color: #b8cce2;
+  border-color: rgba(186, 218, 255, 0.2);
+}
+
+.theme-night .dash-bar-track {
+  background: rgba(190, 222, 255, 0.16);
+}
+
+/* Dark Liquid Glass Floating Nav & Bottom Tab Bar */
+.theme-night .top-nav-inner,
+.theme-night .pomo-fab,
+.theme-night .pomo-panel {
+  background: linear-gradient(180deg, rgba(16, 30, 54, 0.68), rgba(10, 20, 38, 0.56));
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #f0f6fc;
+  box-shadow:
+    0 14px 36px rgba(3, 8, 20, 0.52),
+    inset 0 1.5px 0 rgba(210, 232, 255, 0.28);
+}
+
+.theme-night .top-nav-links {
+  background: rgba(10, 20, 38, 0.44);
+  border-color: rgba(186, 218, 255, 0.18);
+}
+
+.theme-night .top-nav-link {
+  color: #c8dcf2;
+}
+
+.theme-night .top-nav-link--active {
+  background: linear-gradient(180deg, rgba(52, 86, 134, 0.82), rgba(34, 60, 98, 0.72));
+  border-color: rgba(196, 224, 255, 0.36);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(4, 10, 24, 0.35);
+}
+
+.theme-night .top-nav-focus-btn {
+  background: rgba(24, 44, 76, 0.64);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #e4effa;
+  box-shadow: none;
+}
+
+.theme-night .top-nav-focus-btn--on {
+  background: rgba(24, 76, 52, 0.78);
+  color: #a6f0c4;
+}
+
+@media (max-width: 768px) {
+  .theme-night .top-nav-links {
+    background: linear-gradient(180deg, rgba(16, 30, 54, 0.82), rgba(10, 20, 38, 0.74));
+    border-color: rgba(186, 218, 255, 0.28);
+  }
+}
+
+/* Keep study/exam paper cards crisp warm paper when dimmed reading mode is active */
+.theme-night .paper-card h2,
+.theme-night .paper-card h3 {
+  color: #1f2933;
+  text-shadow: none;
+}
