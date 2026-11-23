@@ -112,8 +112,7 @@ function formatInlineMarkdown(escapedLine: string): string {
   // Allow single * math operators inside **bold** and require non-spaced boundaries for *italic* (F2)
   return escapedLine
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/(^|[\s(])\*(?!\s)([^*
-]+?)(?<!\s)\*(?=[\s).,!?]|$)/g, '$1<em>$2</em>')
+    .replace(/(^|[\s(])\*(?!\s)([^*\n]+?)(?<!\s)\*(?=[\s).,!?]|$)/g, '$1<em>$2</em>')
     .replace(/`([^`]+)`/g, '<code>$1</code>');
 }
 
