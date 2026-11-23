@@ -1,3 +1,9 @@
+import { useEffect, useRef, useState } from 'react';
+import {
+  getSceneOption,
+  SCENE_CATALOG,
+  type SceneId,
+} from '../features/meadow/sceneCatalog';
 import type { AppRoute } from '../services/router';
 import { LiquidGlassIcon } from './LiquidGlassIcon';
 import './TopNav.css';
@@ -6,18 +12,46 @@ interface TopNavProps {
   siteTitle: string;
   route: AppRoute;
   focusMode: boolean;
+  sceneId: SceneId;
   onNavigate: (next: AppRoute) => void;
   onToggleFocusMode: () => void;
+  onSelectScene: (sceneId: SceneId) => void;
 }
 
 export function TopNav({
   siteTitle,
   route,
   focusMode,
+  sceneId,
   onNavigate,
   onToggleFocusMode,
+  onSelectScene,
 }: TopNavProps) {
   const isExams = route.name === 'exams' || route.name === 'exam-runner';
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerWrapRef = useRef<HTMLDivElement | null>(null);
+  const activeScene = getSceneOption(sceneId);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (
+        pickerWrapRef.current &&
+        !pickerWrapRef.current.contains(e.target as Node)
+      ) {
+        setPickerOpen(false);
+      }
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPickerOpen(false);
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [pickerOpen]);
 
   return (
     <header className="top-nav">
@@ -66,21 +100,92 @@ export function TopNav({
           </button>
         </nav>
 
-        <button
-          type="button"
-          className={`top-nav-focus-btn${focusMode ? ' top-nav-focus-btn--on' : ''}`}
-          onClick={onToggleFocusMode}
-          aria-pressed={focusMode}
-          title="หยุดภาพเคลื่อนไหวเพื่อลดการรบกวนสายตา"
-        >
-          <LiquidGlassIcon
-            name="focus"
-            tone={focusMode ? 'meadow' : 'neutral'}
-            size="sm"
-            shape="circle"
-          />
-          <span>{focusMode ? 'โหมดนิ่ง: เปิด' : 'โหมดนิ่ง'}</span>
-        </button>
+        <div className="top-nav-actions">
+          <div className="scene-picker-wrap" ref={pickerWrapRef}>
+            <button
+              type="button"
+              className={`top-nav-scene-btn${pickerOpen ? ' top-nav-scene-btn--open' : ''}`}
+              onClick={() => setPickerOpen((prev) => !prev)}
+              aria-expanded={pickerOpen}
+              aria-haspopup="dialog"
+              title={`เปลี่ยนภาพพื้นหลัง (ปัจจุบัน: ${activeScene.title})`}
+            >
+              <span className="scene-btn-thumb-wrap" aria-hidden="true">
+                <img
+                  src={activeScene.previewUrl}
+                  alt=""
+                  className="scene-btn-thumb"
+                />
+              </span>
+              <span className="scene-btn-label">พื้นหลัง</span>
+            </button>
+
+            {pickerOpen && (
+              <div
+                className="scene-picker-popover"
+                role="dialog"
+                aria-label="เลือกภาพพื้นหลัง"
+              >
+                <div className="scene-picker-head">
+                  <span className="scene-picker-title">เลือกภาพพื้นหลัง</span>
+                  <span className="scene-picker-count">
+                    {SCENE_CATALOG.length} ฉาก
+                  </span>
+                </div>
+                <div className="scene-picker-grid">
+                  {SCENE_CATALOG.map((scene) => {
+                    const isSelected = scene.id === sceneId;
+                    return (
+                      <button
+                        key={scene.id}
+                        type="button"
+                        className={`scene-picker-item${
+                          isSelected ? ' scene-picker-item--active' : ''
+                        }`}
+                        onClick={() => {
+                          onSelectScene(scene.id);
+                          setPickerOpen(false);
+                        }}
+                      >
+                        <span className="scene-item-preview">
+                          <img
+                            src={scene.previewUrl}
+                            alt={scene.title}
+                            className="scene-item-img"
+                            loading="lazy"
+                          />
+                          <span className="scene-item-badge">{scene.badge}</span>
+                          {isSelected && (
+                            <span className="scene-item-check" aria-hidden="true">
+                              ✓
+                            </span>
+                          )}
+                        </span>
+                        <span className="scene-item-name">{scene.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className={`top-nav-focus-btn${focusMode ? ' top-nav-focus-btn--on' : ''}`}
+            onClick={onToggleFocusMode}
+            aria-pressed={focusMode}
+            title="หยุดภาพเคลื่อนไหวเพื่อลดการรบกวนสายตา"
+          >
+            <LiquidGlassIcon
+              name="focus"
+              tone={focusMode ? 'meadow' : 'neutral'}
+              size="sm"
+              shape="circle"
+            />
+            <span>{focusMode ? 'โหมดนิ่ง: เปิด' : 'โหมดนิ่ง'}</span>
+          </button>
+        </div>
       </div>
     </header>
   );

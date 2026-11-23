@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getBangkokHourFloat, isDarkAtmosphere } from './domain/atmosphere';
+import { getBangkokHourFloat } from './domain/atmosphere';
 import type { BootstrapPayload, ExamMode, UserProgress } from './domain/models';
 import { DashboardView } from './features/dashboard/DashboardView';
 import { ExamRunnerView } from './features/exams/ExamRunnerView';
 import { ExamsHubView } from './features/exams/ExamsHubView';
 import { MeadowScene } from './features/meadow/MeadowScene';
+import {
+  isSceneDark,
+  loadSelectedScene,
+  saveSelectedScene,
+  type SceneId,
+} from './features/meadow/sceneCatalog';
 import { PomodoroWidget } from './features/pomodoro/PomodoroWidget';
 import { StudyView } from './features/study/StudyView';
 import { ambientEngine, type AmbientTrackId } from './features/widgets/ambientAudio';
@@ -35,6 +41,7 @@ export function App() {
   const [hourFloat, setHourFloat] = useState<number>(() => getBangkokHourFloat());
   const [selectedExamMode, setSelectedExamMode] = useState<ExamMode>('timed');
   const [audio, setAudio] = useState<AmbientPlayerState>(loadAmbientState);
+  const [sceneId, setSceneId] = useState<SceneId>(loadSelectedScene);
 
   const audioRef = useRef<AmbientPlayerState>(audio);
   audioRef.current = audio;
@@ -42,6 +49,10 @@ export function App() {
   useEffect(() => {
     saveAmbientState(audio);
   }, [audio.trackId, audio.volume]);
+
+  useEffect(() => {
+    saveSelectedScene(sceneId);
+  }, [sceneId]);
 
   const progressRef = useRef<UserProgress>(progress);
   progressRef.current = progress;
@@ -172,7 +183,7 @@ export function App() {
   }, []);
 
   const isReadingView = route.name !== 'dashboard';
-  const isNight = isDarkAtmosphere(hourFloat);
+  const isNight = isSceneDark(sceneId, hourFloat);
 
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -186,6 +197,7 @@ export function App() {
       <LiquidGlassFilters />
 
       <MeadowScene
+        sceneId={sceneId}
         dimmed={isReadingView}
         focusMode={progress.preferences.focusMode}
         hourFloat={hourFloat}
@@ -195,8 +207,10 @@ export function App() {
         siteTitle={bootstrap.config.siteTitle}
         route={route}
         focusMode={progress.preferences.focusMode}
+        sceneId={sceneId}
         onNavigate={navigate}
         onToggleFocusMode={toggleFocusMode}
+        onSelectScene={setSceneId}
       />
 
       <main className="app-main">
