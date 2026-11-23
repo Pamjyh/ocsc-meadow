@@ -70,122 +70,6 @@
   margin: 0;
 }
 
-/* YouTube Music Card */
-.ytm-now-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding: 8px 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.86);
-  font-size: 0.84rem;
-}
-
-.ytm-now-label {
-  color: #365066;
-  font-weight: 600;
-}
-
-.ytm-now-title {
-  color: #102436;
-  font-weight: 600;
-  flex: 1;
-  min-width: 120px;
-}
-
-.ytm-ext-link {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--accent-primary-hover);
-  text-decoration: none;
-}
-
-.ytm-presets {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.ytm-preset-chip {
-  text-align: left;
-  padding: 9px 10px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  background: rgba(255, 255, 255, 0.68);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.ytm-preset-chip--active {
-  border-color: rgba(58, 142, 206, 0.7);
-  background: rgba(226, 242, 255, 0.88);
-}
-
-.ytm-preset-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #102436;
-}
-
-.ytm-preset-sub {
-  font-size: 0.74rem;
-  color: #365066;
-}
-
-.ytm-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.ytm-form-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.ytm-saved-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #365066;
-  margin-bottom: 6px;
-}
-
-.ytm-saved-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.ytm-saved-chip {
-  display: inline-flex;
-  align-items: center;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  overflow: hidden;
-}
-
-.ytm-saved-play {
-  border: none;
-  background: transparent;
-  padding: 4px 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #14324c;
-}
-
-.ytm-saved-del {
-  border: none;
-  background: transparent;
-  padding: 4px 8px;
-  font-size: 0.74rem;
-  color: #8c3434;
-}
-
 /* Persistent Global Music Dock (F21: mirrors PomodoroWidget.css mobile clearance) */
 .music-dock-root {
   position: fixed;
@@ -227,16 +111,6 @@
   white-space: nowrap;
 }
 
-.music-dock-pill-close {
-  border: none;
-  background: rgba(255, 255, 255, 0.65);
-  color: #243b50;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  font-size: 0.76rem;
-}
-
 .music-dock-dot {
   width: 8px;
   height: 8px;
@@ -246,112 +120,10 @@
   flex-shrink: 0;
 }
 
-.music-dock-panel {
-  width: min(320px, calc(100vw - 24px));
-  padding: 12px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.84);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82), rgba(246, 251, 255, 0.68));
-  backdrop-filter: blur(24px) saturate(210%) brightness(1.08);
-  -webkit-backdrop-filter: blur(24px) saturate(210%) brightness(1.08);
-  box-shadow: 0 16px 40px rgba(20, 48, 74, 0.22), inset 0 1.5px 0 rgba(255, 255, 255, 0.96);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Keep iframe mounted & playing while collapsed */
-.music-dock-panel--hidden {
-  position: fixed;
-  left: -9999px;
-  width: 1px;
-  height: 1px;
-  opacity: 0.001;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.music-dock-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.music-dock-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.music-dock-title {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #102436;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.music-dock-controls {
-  display: inline-flex;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.music-dock-btn {
-  border: none;
-  background: rgba(255, 255, 255, 0.72);
-  color: #243b50;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.music-dock-frame-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 14px;
-  overflow: hidden;
-  background: #0d1726;
-}
-
-.music-dock-iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.music-dock-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 0.74rem;
-  color: #365066;
-}
-
-.music-dock-ext-link {
-  color: var(--accent-primary-hover);
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
 @media (max-width: 768px) {
   .music-dock-root {
     left: 12px;
     bottom: calc(82px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .ytm-presets {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -589,19 +361,12 @@
 
 /* Night Mode (.theme-night) for Stage 2 Widgets & GlobalMusicDock */
 .theme-night .widget-card-title,
-.theme-night .ytm-now-title,
-.theme-night .ytm-preset-name,
-.theme-night .music-dock-title,
 .theme-night .music-dock-pill-main,
 .theme-night .sticky-title-input {
   color: #f1f6fc;
 }
 
 .theme-night .widget-card-sub,
-.theme-night .ytm-now-label,
-.theme-night .ytm-preset-sub,
-.theme-night .ytm-saved-label,
-.theme-night .music-dock-footer,
 .theme-night .photo-empty,
 .theme-night .photo-empty-hint,
 .theme-night .sticky-body-input {
@@ -615,9 +380,6 @@
 }
 
 .theme-night .widget-mini-pill,
-.theme-night .ytm-now-row,
-.theme-night .ytm-preset-chip,
-.theme-night .ytm-saved-chip,
 .theme-night .photo-empty,
 .theme-night .photo-frame-wrap {
   background: rgba(18, 34, 60, 0.66);
@@ -625,31 +387,10 @@
   color: #e6f0fa;
 }
 
-.theme-night .ytm-preset-chip--active {
-  background: rgba(42, 76, 122, 0.82);
-  border-color: rgba(160, 210, 255, 0.48);
-}
-
-.theme-night .ytm-saved-play {
-  color: #e6f0fa;
-}
-
-.theme-night .ytm-ext-link,
-.theme-night .music-dock-ext-link {
-  color: #9ed2ff;
-}
-
-.theme-night .music-dock-pill,
-.theme-night .music-dock-panel {
+.theme-night .music-dock-pill {
   background: linear-gradient(180deg, rgba(16, 30, 54, 0.74), rgba(10, 20, 38, 0.64));
   border-color: rgba(186, 218, 255, 0.26);
   box-shadow: 0 14px 36px rgba(3, 8, 20, 0.52), inset 0 1.5px 0 rgba(210, 232, 255, 0.26);
-}
-
-.theme-night .music-dock-btn,
-.theme-night .music-dock-pill-close {
-  background: rgba(28, 50, 84, 0.78);
-  color: #eaf3fc;
 }
 
 /* F24: Specificity (0,3,0) so Night Mode pastel tints override .theme-night .glass-card */

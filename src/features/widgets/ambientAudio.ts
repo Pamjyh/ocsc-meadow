@@ -96,6 +96,18 @@ class AmbientAudioEngine {
   private pauseTimeout: ReturnType<typeof setTimeout> | null = null;
   private activeTrack: AmbientTrackId | null = null;
   private volume = 0.55;
+  // Cached stereo noise buffers per AudioContext so track switches avoid regenerating ~260k samples (F55)
+  private pinkBuffer: AudioBuffer | null = null;
+  private brownBuffer: AudioBuffer | null = null;
+
+  private getNoiseBuffer(ctx: AudioContext, kind: 'pink' | 'brown'): AudioBuffer {
+    if (kind === 'pink') {
+      this.pinkBuffer ??= createNoiseBuffer(ctx, 'pink', 5);
+      return this.pinkBuffer;
+    }
+    this.brownBuffer ??= createNoiseBuffer(ctx, 'brown', 6);
+    return this.brownBuffer;
+  }
 
   private ensureContext(): AudioContext | null {
     if (typeof window === 'undefined') return null;
@@ -198,7 +210,7 @@ class AmbientAudioEngine {
 
     // Warm pink-noise rain bed
     const src = ctx.createBufferSource();
-    src.buffer = createNoiseBuffer(ctx, 'pink', 5);
+    src.buffer = this.getNoiseBuffer(ctx, 'pink');
     src.loop = true;
 
     const lowpass = ctx.createBiquadFilter();
@@ -222,7 +234,7 @@ class AmbientAudioEngine {
 
     // Soft subtle brown rumble underneath
     const deepSrc = ctx.createBufferSource();
-    deepSrc.buffer = createNoiseBuffer(ctx, 'brown', 5);
+    deepSrc.buffer = this.getNoiseBuffer(ctx, 'brown');
     deepSrc.loop = true;
     const deepFilter = ctx.createBiquadFilter();
     deepFilter.type = 'lowpass';
@@ -256,7 +268,7 @@ class AmbientAudioEngine {
 
     // Subtle warm vinyl hiss bed
     const vinylSrc = ctx.createBufferSource();
-    vinylSrc.buffer = createNoiseBuffer(ctx, 'pink', 4);
+    vinylSrc.buffer = this.getNoiseBuffer(ctx, 'pink');
     vinylSrc.loop = true;
     const vinylFilter = ctx.createBiquadFilter();
     vinylFilter.type = 'bandpass';
@@ -279,6 +291,8 @@ class AmbientAudioEngine {
     const activeOscs = new Set<OscillatorNode>();
 
     const triggerChord = () => {
+      // Skip scheduling oscillators if OS/browser suspended audio (e.g. headphone disconnect) (F56)
+      if (ctx.state !== 'running') return;
       const notes = chords[step % chords.length]!;
       step += 1;
       const now = ctx.currentTime;
@@ -346,7 +360,7 @@ class AmbientAudioEngine {
 
   private startMeadow(ctx: AudioContext, dest: GainNode): StopFn {
     const src = ctx.createBufferSource();
-    src.buffer = createNoiseBuffer(ctx, 'pink', 6);
+    src.buffer = this.getNoiseBuffer(ctx, 'pink');
     src.loop = true;
 
     const filter = ctx.createBiquadFilter();
@@ -399,7 +413,7 @@ class AmbientAudioEngine {
 
   private startFocus(ctx: AudioContext, dest: GainNode): StopFn {
     const src = ctx.createBufferSource();
-    src.buffer = createNoiseBuffer(ctx, 'brown', 6);
+    src.buffer = this.getNoiseBuffer(ctx, 'brown');
     src.loop = true;
 
     const filter = ctx.createBiquadFilter();
