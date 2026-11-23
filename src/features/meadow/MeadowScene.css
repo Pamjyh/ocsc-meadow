@@ -24,6 +24,10 @@
   user-select: none;
 }
 
+.meadow-canvas[hidden] {
+  display: none;
+}
+
 /* Soft translucent glass scrim on reading/exam views (no full-screen blur to keep mobile 60fps - F2) */
 .meadow-paper-veil {
   position: fixed;
