@@ -372,7 +372,7 @@ void main() {
     // Mode 3 (Pink Hillside Garden): mirrored soft pastel clouds drifting slowly left
     if (uv.y < skyCloudRange && skyMask > 0.02) {
       float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
-      float d1 = fract(1.0 - uv.x * 0.78 + 0.31 + uTime * 0.0055);
+      float d1 = fract(1.0 - uv.x * 0.78 + 0.31 - uTime * 0.0055);
       vec4 c1 = texture2D(uCloudTex, vec2(d1, clamp(cy * 1.12, 0.002, 0.998)));
       float veil = smoothstep(0.54, 0.85, fbm3(vec2(uv.x * 2.8 + uTime * 0.028, uv.y * 6.0 + 3.4)));
       finalRgb = mix(finalRgb, vec3(1.0, 0.96, 0.98) * cloudTint, veil * 0.22 * skyMask * cloudAlphaScale);
@@ -393,7 +393,7 @@ void main() {
     // Mode 5 (Coastal Lighthouse): brisk sea-breeze trade-wind clouds & ocean sky streaks rushing left
     if (uv.y < skyCloudRange && skyMask > 0.02) {
       float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
-      float d1 = fract(1.0 - uv.x * 0.92 + 0.67 + uTime * 0.014);
+      float d1 = fract(1.0 - uv.x * 0.92 + 0.67 - uTime * 0.014);
       vec4 c1 = texture2D(uCloudTex, vec2(d1, clamp(cy * 1.18, 0.002, 0.998)));
       float streak = smoothstep(0.52, 0.84, fbm3(vec2(uv.x * 2.2 + uTime * 0.085, uv.y * 11.0 + uv.x * 1.2)));
       finalRgb = mix(finalRgb, vec3(0.97, 0.99, 1.0) * cloudTint, streak * 0.28 * skyMask * cloudAlphaScale);
@@ -421,7 +421,7 @@ void main() {
     if (uv.y < skyCloudRange && skyMask > 0.02) {
       float lowBand = smoothstep(0.16, skyCloudRange * 0.85, uv.y);
       float cy = clamp((uv.y - 0.14) / max(skyCloudRange - 0.14, 0.15), 0.002, 0.998);
-      float d1 = fract(1.0 - uv.x * 0.84 + 0.77 - uTime * 0.0068);
+      float d1 = fract(1.0 - uv.x * 0.84 + 0.77 + uTime * 0.0068);
       vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
       float highCirrus = smoothstep(0.56, 0.86, fbm3(vec2(uv.x * 3.1 - uTime * 0.036, uv.y * 12.5 + 5.7))) * smoothstep(0.36, 0.04, uv.y);
       finalRgb = mix(finalRgb, vec3(0.98, 0.99, 1.0) * cloudTint, highCirrus * 0.26 * skyMask * cloudAlphaScale);
