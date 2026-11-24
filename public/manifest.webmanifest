@@ -1,0 +1,20 @@
+{
+  "name": "เตรียมสอบ ก.พ. | OCSC Meadow",
+  "short_name": "OCSC Meadow",
+  "description": "พื้นที่อ่านหนังสือและฝึกทำข้อสอบ ก.พ. ภาค ก ระดับปริญญาตรี สบายตาและใช้งานได้ทันที",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#5fa4d1",
+  "theme_color": "#5fa4d1",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "./meadow-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

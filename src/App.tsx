@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getBangkokHourFloat } from './domain/atmosphere';
 import type { BootstrapPayload, ExamMode, UserProgress } from './domain/models';
 import { DashboardView } from './features/dashboard/DashboardView';
-import { ExamRunnerView } from './features/exams/ExamRunnerView';
-import { ExamsHubView } from './features/exams/ExamsHubView';
 import { MeadowScene } from './features/meadow/MeadowScene';
 import {
   isSceneDark,
@@ -12,7 +10,6 @@ import {
   type SceneId,
 } from './features/meadow/sceneCatalog';
 import { PomodoroWidget } from './features/pomodoro/PomodoroWidget';
-import { StudyView } from './features/study/StudyView';
 import {
   ambientEngine,
   type AmbientLayerKey,
@@ -42,13 +39,27 @@ import {
 import { useHashRoute } from './services/router';
 import { showToast } from './services/toast';
 import { isUiSfxEnabled, playUiSound, setUiSfxEnabled } from './services/uiSound';
-import { CommandPalette } from './ui/CommandPalette';
 import type { CommandItem } from './ui/commandPaletteItems';
 import { launchConfetti } from './ui/confetti';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
 import { ToastHost } from './ui/ToastHost';
 import { TopNav } from './ui/TopNav';
-import { ZenFocusOverlay } from './ui/ZenFocusOverlay';
+
+const StudyView = lazy(() =>
+  import('./features/study/StudyView').then((m) => ({ default: m.StudyView })),
+);
+const ExamsHubView = lazy(() =>
+  import('./features/exams/ExamsHubView').then((m) => ({ default: m.ExamsHubView })),
+);
+const ExamRunnerView = lazy(() =>
+  import('./features/exams/ExamRunnerView').then((m) => ({ default: m.ExamRunnerView })),
+);
+const CommandPalette = lazy(() =>
+  import('./ui/CommandPalette').then((m) => ({ default: m.CommandPalette })),
+);
+const ZenFocusOverlay = lazy(() =>
+  import('./ui/ZenFocusOverlay').then((m) => ({ default: m.ZenFocusOverlay })),
+);
 
 export function App() {
   const [bootstrap, setBootstrap] = useState<BootstrapPayload>(loadCachedBootstrap);
@@ -508,16 +519,18 @@ export function App() {
       />
 
       {zenMode ? (
-        <ZenFocusOverlay
-          sceneId={sceneId}
-          audio={audio}
-          disableEsc={cmdOpen}
-          onSelectScene={setSceneId}
-          onTogglePlay={handleTogglePlay}
-          onPrevTrack={handlePrevTrack}
-          onNextTrack={handleNextTrack}
-          onExit={handleExitZen}
-        />
+        <Suspense fallback={null}>
+          <ZenFocusOverlay
+            sceneId={sceneId}
+            audio={audio}
+            disableEsc={cmdOpen}
+            onSelectScene={setSceneId}
+            onTogglePlay={handleTogglePlay}
+            onPrevTrack={handlePrevTrack}
+            onNextTrack={handleNextTrack}
+            onExit={handleExitZen}
+          />
+        </Suspense>
       ) : (
         <>
           <TopNav
@@ -555,37 +568,48 @@ export function App() {
                 />
               )}
 
-              {route.name === 'study' && (
-                <StudyView
-                  bootstrap={bootstrap}
-                  progress={progress}
-                  activeDocId={route.docId}
-                  onNavigate={navigate}
-                  onUpdateProgress={updateProgress}
-                />
-              )}
+              <Suspense
+                fallback={
+                  <div
+                    className="glass-card"
+                    style={{ padding: '28px 24px', textAlign: 'center', fontWeight: 600 }}
+                  >
+                    กำลังโหลดหน้า...
+                  </div>
+                }
+              >
+                {route.name === 'study' && (
+                  <StudyView
+                    bootstrap={bootstrap}
+                    progress={progress}
+                    activeDocId={route.docId}
+                    onNavigate={navigate}
+                    onUpdateProgress={updateProgress}
+                  />
+                )}
 
-              {route.name === 'exams' && (
-                <ExamsHubView
-                  bootstrap={bootstrap}
-                  progress={progress}
-                  activeTab={route.tab}
-                  onNavigate={navigate}
-                  onStartExam={handleStartExam}
-                  onUpdateProgress={updateProgress}
-                />
-              )}
+                {route.name === 'exams' && (
+                  <ExamsHubView
+                    bootstrap={bootstrap}
+                    progress={progress}
+                    activeTab={route.tab}
+                    onNavigate={navigate}
+                    onStartExam={handleStartExam}
+                    onUpdateProgress={updateProgress}
+                  />
+                )}
 
-              {route.name === 'exam-runner' && (
-                <ExamRunnerView
-                  key={route.examId}
-                  examId={route.examId}
-                  initialMode={selectedExamMode}
-                  progress={progress}
-                  onNavigate={navigate}
-                  onUpdateProgress={updateProgress}
-                />
-              )}
+                {route.name === 'exam-runner' && (
+                  <ExamRunnerView
+                    key={route.examId}
+                    examId={route.examId}
+                    initialMode={selectedExamMode}
+                    progress={progress}
+                    onNavigate={navigate}
+                    onUpdateProgress={updateProgress}
+                  />
+                )}
+              </Suspense>
             </div>
           </main>
 
@@ -605,11 +629,15 @@ export function App() {
 
       <ToastHost />
 
-      <CommandPalette
-        open={cmdOpen}
-        items={commandItems}
-        onClose={() => setCmdOpen(false)}
-      />
+      {cmdOpen && (
+        <Suspense fallback={null}>
+          <CommandPalette
+            open={cmdOpen}
+            items={commandItems}
+            onClose={() => setCmdOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
