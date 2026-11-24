@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { showToast } from '../../services/toast';
 import { launchConfetti } from '../../ui/confetti';
 import { LiquidGlassIcon } from '../../ui/LiquidGlassIcon';
-import { GARDEN_SPECIES_META, plantFocusSession } from '../widgets/focusGardenStore';
+import {
+  GARDEN_SPECIES_META,
+  loadGardenPlants,
+  plantFocusSession,
+  summarizeGarden,
+} from '../widgets/focusGardenStore';
 import { recordStudyActivity } from '../widgets/streakStore';
 import { playGentleChime } from './chime';
 import './PomodoroWidget.css';
@@ -33,7 +38,9 @@ export function PomodoroWidget({ muted, onToggleMute }: PomodoroWidgetProps) {
   const [remainingSeconds, setRemainingSeconds] = useState<number>(25 * 60);
   const [endAtMs, setEndAtMs] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
-  const [completedSessions, setCompletedSessions] = useState(0);
+  const [completedSessions, setCompletedSessions] = useState(
+    () => summarizeGarden(loadGardenPlants()).todayPlants,
+  );
   const completedEndAtRef = useRef<number | null>(null);
 
   // Wall-clock driven timer (prevents background tab drift and StrictMode double side-effects - F1)
@@ -48,8 +55,8 @@ export function PomodoroWidget({ muted, onToggleMute }: PomodoroWidgetProps) {
         setRunning(false);
         setEndAtMs(null);
         if (preset === 'focus') {
-          setCompletedSessions((c) => c + 1);
-          const { planted } = plantFocusSession(customMinutes);
+          const { plants, planted } = plantFocusSession(customMinutes);
+          setCompletedSessions(summarizeGarden(plants).todayPlants);
           const meta = GARDEN_SPECIES_META[planted.species];
           recordStudyActivity(1);
           launchConfetti({ intensity: 'soft' });

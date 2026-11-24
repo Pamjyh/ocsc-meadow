@@ -97,7 +97,10 @@ export function plantFocusSession(
 ): { plants: GardenPlant[]; planted: GardenPlant } {
   const safeMinutes = Math.max(1, Math.min(180, Math.round(minutes)));
   const existing = loadGardenPlants();
-  const species = pickSpeciesForMinutes(safeMinutes, existing.length);
+  const species = pickSpeciesForMinutes(
+    safeMinutes,
+    existing.length + Math.floor(nowMs / 1000),
+  );
   const nowDate = new Date(nowMs);
 
   const planted: GardenPlant = {
