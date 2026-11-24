@@ -17,6 +17,11 @@ import {
 } from '../../ui/LiquidGlassIcon';
 import { recordStudyActivity } from '../widgets/streakStore';
 import {
+  loadAllBlurts,
+  saveBlurtNote,
+  type StudyBlurtMap,
+} from './studyBlurtStore';
+import {
   addStudyHighlight,
   loadAllStudyHighlights,
   normalizeHighlightText,
@@ -67,6 +72,8 @@ export function StudyView({
   const [highlightsMap, setHighlightsMap] = useState<StudyHighlightsMap>(loadAllStudyHighlights);
   const [highlightsOpen, setHighlightsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState('');
+  const [blurtMode, setBlurtMode] = useState<'read' | 'blurt' | 'compare'>('read');
+  const [blurtMap, setBlurtMap] = useState<StudyBlurtMap>(loadAllBlurts);
   const proseRef = useRef<HTMLDivElement | null>(null);
 
   const selectedItem = useMemo(() => {
@@ -227,6 +234,11 @@ export function StudyView({
     [docContent],
   );
 
+  // Reset blurt mode when switching chapters
+  useEffect(() => {
+    setBlurtMode('read');
+  }, [selectedItem?.id]);
+
   // Track exact document scroll progress (0%..100%) across any chapter length (F83)
   useEffect(() => {
     setSelectedQuote('');
@@ -285,6 +297,30 @@ export function StudyView({
   }, [selectedItem?.id]);
 
   const docHighlights = selectedItem ? (highlightsMap[selectedItem.id] ?? []) : [];
+  const docBlurtText = selectedItem ? (blurtMap[selectedItem.id]?.text ?? '') : '';
+
+  const handleChangeBlurt = (nextText: string) => {
+    if (!selectedItem) return;
+    setBlurtMap((prev) => saveBlurtNote(prev, selectedItem.id, nextText));
+  };
+
+  const handleToggleBlurtMode = () => {
+    playUiSound('tap');
+    setSelectedQuote('');
+    setBlurtMode((prev) => (prev === 'read' ? 'blurt' : 'read'));
+  };
+
+  const handleFinishBlurtReview = () => {
+    if (!selectedItem) return;
+    recordStudyActivity(1);
+    playUiSound('checkin');
+    showToast({
+      message: 'ทบทวนแบบ Blurting สำเร็จ (+1 Streak)',
+      detail: selectedItem.title,
+      tone: 'success',
+    });
+    setBlurtMode('read');
+  };
 
   const handleSaveHighlight = (color: HighlightColor) => {
     if (!selectedItem || !selectedQuote) return;
@@ -504,6 +540,16 @@ export function StudyView({
 
                   <button
                     type="button"
+                    className={`study-action-btn${blurtMode !== 'read' ? ' study-action-btn--blurt' : ''}`}
+                    onClick={handleToggleBlurtMode}
+                    aria-pressed={blurtMode !== 'read'}
+                    title="ปิดตำราเพื่อลองเขียนสรุปจากความจำ แล้วเทียบกับเนื้อหาจริง"
+                  >
+                    <span>{blurtMode === 'read' ? '🧠 ปิดตำราเขียนทวน' : '📖 กลับโหมดอ่าน'}</span>
+                  </button>
+
+                  <button
+                    type="button"
                     className={`study-action-btn${isCompleted ? ' study-action-btn--done' : ''}`}
                     onClick={toggleCompleted}
                     aria-pressed={isCompleted}
@@ -513,7 +559,7 @@ export function StudyView({
                 </div>
               </header>
 
-              {docHighlights.length > 0 && (
+              {blurtMode !== 'blurt' && docHighlights.length > 0 && (
                 <section className="study-hl-bar" aria-label="ข้อความที่ไฮไลต์ไว้ในบทนี้">
                   <button
                     type="button"
@@ -556,7 +602,94 @@ export function StudyView({
                 </section>
               )}
 
-              {loadingDoc && !docContent ? (
+              {blurtMode === 'blurt' ? (
+                <section className="study-blurt-panel" aria-label="กระดานเขียนทวนแบบปิดตำรา">
+                  <div className="study-blurt-head">
+                    <div>
+                      <strong className="study-blurt-title">
+                        🧠 ปิดตำราเขียนทวน (Blurting Recall)
+                      </strong>
+                      <p className="study-blurt-sub">
+                        ซ่อนเนื้อหาและไฮไลต์ไว้ชั่วคราว ลองพิมพ์หลักการ สูตร หรือมาตราที่จำได้ด้วยภาษาตัวเอง
+                      </p>
+                    </div>
+                    <span className="study-blurt-count">{docBlurtText.length} / 4,000 ตัวอักษร</span>
+                  </div>
+
+                  <textarea
+                    className="study-blurt-textarea"
+                    rows={10}
+                    placeholder="ลองเขียนทุกอย่างที่จำได้จากบทนี้ เช่น หลักการสำคัญ สูตร ข้อยกเว้น หรือคำศัพท์..."
+                    value={docBlurtText}
+                    onChange={(e) => handleChangeBlurt(e.target.value)}
+                  />
+
+                  <div className="study-blurt-actions">
+                    <button
+                      type="button"
+                      className="study-nav-btn study-nav-btn--primary"
+                      onClick={() => {
+                        playUiSound('tap');
+                        setBlurtMode('compare');
+                      }}
+                    >
+                      เปิดเทียบกับเนื้อหาจริง →
+                    </button>
+                    <button
+                      type="button"
+                      className="study-nav-btn"
+                      disabled={docBlurtText.length === 0}
+                      onClick={() => handleChangeBlurt('')}
+                    >
+                      ล้างข้อความ
+                    </button>
+                  </div>
+                </section>
+              ) : blurtMode === 'compare' ? (
+                <div className="study-compare-grid">
+                  <section className="study-blurt-panel study-blurt-panel--compact">
+                    <div className="study-blurt-head">
+                      <strong className="study-blurt-title">✍️ สิ่งที่คุณเขียนทวนไว้</strong>
+                      <button
+                        type="button"
+                        className="study-action-btn"
+                        onClick={() => setBlurtMode('blurt')}
+                      >
+                        ซ่อนตำราอีกรอบ
+                      </button>
+                    </div>
+                    <textarea
+                      className="study-blurt-textarea study-blurt-textarea--compare"
+                      rows={12}
+                      placeholder="เติมจุดที่เพิ่งนึกออกหรือตกหล่นลงที่นี่ได้เลย..."
+                      value={docBlurtText}
+                      onChange={(e) => handleChangeBlurt(e.target.value)}
+                    />
+                    <div className="study-blurt-actions">
+                      <button
+                        type="button"
+                        className="study-nav-btn study-nav-btn--primary"
+                        disabled={docBlurtText.trim().length === 0}
+                        onClick={handleFinishBlurtReview}
+                      >
+                        ✓ จบการทวน (+1 Streak)
+                      </button>
+                    </div>
+                  </section>
+
+                  <div className="study-compare-source">
+                    {loadingDoc && !docContent ? (
+                      <p style={{ color: 'var(--text-muted)' }}>กำลังโหลดเนื้อหา...</p>
+                    ) : (
+                      <div
+                        ref={proseRef}
+                        className={`study-prose study-prose--${progress.preferences.fontSize}`}
+                        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : loadingDoc && !docContent ? (
                 <p style={{ marginTop: 28, color: 'var(--text-muted)' }}>กำลังโหลดเนื้อหา...</p>
               ) : (
                 <div

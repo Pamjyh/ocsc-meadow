@@ -680,3 +680,129 @@
   background: rgba(186, 218, 255, 0.16);
   color: #d6e8fb;
 }
+
+/* Blurting / Feynman Active Recall Mode */
+.study-action-btn--blurt {
+  background: rgba(232, 224, 255, 0.88);
+  border-color: rgba(124, 92, 214, 0.38);
+  color: #4a2a8f;
+}
+
+.study-blurt-panel {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.64);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.study-blurt-panel--compact {
+  margin-top: 0;
+  padding: 16px;
+}
+
+.study-blurt-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.study-blurt-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: #142a40;
+}
+
+.study-blurt-sub {
+  font-size: 0.84rem;
+  color: #466078;
+  margin-top: 3px;
+}
+
+.study-blurt-count {
+  font-size: 0.78rem;
+  color: #526c84;
+  font-variant-numeric: tabular-nums;
+}
+
+.study-blurt-textarea {
+  width: 100%;
+  min-height: 220px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(20, 48, 74, 0.16);
+  background: rgba(255, 255, 255, 0.86);
+  color: #102436;
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  line-height: 1.75;
+  resize: vertical;
+}
+
+.study-blurt-textarea--compare {
+  min-height: 300px;
+}
+
+.study-blurt-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.study-compare-grid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.study-compare-source {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+}
+
+.study-compare-source .study-prose {
+  margin-top: 0;
+}
+
+@media (max-width: 960px) {
+  .study-compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.theme-night .study-action-btn--blurt {
+  background: rgba(74, 52, 134, 0.78);
+  border-color: rgba(196, 176, 255, 0.36);
+  color: #e4d8ff;
+}
+
+.theme-night .study-blurt-panel,
+.theme-night .study-compare-source {
+  background: rgba(18, 34, 60, 0.68);
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .study-blurt-title {
+  color: #f0f6fc;
+}
+
+.theme-night .study-blurt-sub,
+.theme-night .study-blurt-count {
+  color: #b8d0e8;
+}
+
+.theme-night .study-blurt-textarea {
+  background: rgba(12, 24, 46, 0.82);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #f0f6fc;
+}
