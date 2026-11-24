@@ -10,6 +10,19 @@ import {
 export const MISTAKES_STORAGE_KEY = 'ocsc_meadow_mistakes_v1';
 export const FLASHCARD_SRS_STORAGE_KEY = 'ocsc_meadow_srs_v1';
 
+export type ErrorCauseTag = 'concept' | 'careless' | 'misread' | 'time';
+
+export const ERROR_CAUSE_OPTIONS: readonly {
+  tag: ErrorCauseTag;
+  emoji: string;
+  label: string;
+}[] = [
+  { tag: 'concept', emoji: '📚', label: 'จำหลัก/สูตรไม่ได้' },
+  { tag: 'careless', emoji: '🧮', label: 'คิดเลข/สะเพร่า' },
+  { tag: 'misread', emoji: '👀', label: 'อ่านโจทย์ไม่ครบ' },
+  { tag: 'time', emoji: '⏱️', label: 'ทำไม่ทัน/รีบเดา' },
+] as const;
+
 export interface MistakeRecord {
   id: string;
   examId: string;
@@ -24,6 +37,7 @@ export interface MistakeRecord {
   wrongCount: number;
   lastWrongAt: string;
   srs: SrsCardState;
+  errorTag?: ErrorCauseTag;
 }
 
 export type FlashcardSrsMap = Record<string, SrsCardState>;
@@ -80,6 +94,7 @@ export function recordExamMistakes(
         wrongCount: (prev?.wrongCount ?? 0) + 1,
         lastWrongAt: nowIso,
         srs: createInitialSrsState(nowMs),
+        ...(prev?.errorTag ? { errorTag: prev.errorTag } : {}),
       });
     } else if (prev) {
       const { next } = scheduleSrsReview(prev.srs, 3, nowMs);
@@ -109,6 +124,39 @@ export function rateMistakeRecord(
   });
   saveMistakes(list);
   return list;
+}
+
+export function tagMistakeRecord(
+  id: string,
+  tag: ErrorCauseTag | undefined,
+): MistakeRecord[] {
+  const list = loadMistakes().map((m) => {
+    if (m.id !== id) return m;
+    if (!tag) {
+      const { errorTag: _removed, ...rest } = m;
+      return rest;
+    }
+    return { ...m, errorTag: tag };
+  });
+  saveMistakes(list);
+  return list;
+}
+
+export function summarizeErrorCauses(
+  records: readonly Pick<MistakeRecord, 'errorTag'>[],
+): Record<ErrorCauseTag, number> {
+  const counts: Record<ErrorCauseTag, number> = {
+    concept: 0,
+    careless: 0,
+    misread: 0,
+    time: 0,
+  };
+  for (const r of records) {
+    if (r.errorTag && r.errorTag in counts) {
+      counts[r.errorTag] += 1;
+    }
+  }
+  return counts;
 }
 
 export function removeMistakeRecord(id: string): MistakeRecord[] {

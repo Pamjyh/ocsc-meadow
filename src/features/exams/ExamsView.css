@@ -511,3 +511,75 @@
     padding: 20px 18px;
   }
 }
+
+/* Per-Question Pacing Analytics Card */
+.review-pacing-card {
+  border-radius: 22px;
+  padding: 18px 22px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.72) 0%,
+    rgba(255, 255, 255, 0.54) 100%
+  );
+  backdrop-filter: blur(22px) saturate(200%);
+  -webkit-backdrop-filter: blur(22px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-pacing-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.review-pacing-stats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.review-pacing-strip {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pacing-pill {
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(20, 48, 74, 0.12);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #20374c;
+  font-variant-numeric: tabular-nums;
+}
+
+.pacing-pill--slow {
+  background: rgba(255, 241, 214, 0.92);
+  border-color: rgba(200, 125, 32, 0.42);
+  color: #9e5c10;
+}
+
+.theme-night .review-pacing-card {
+  background: linear-gradient(145deg, rgba(16, 30, 54, 0.76), rgba(10, 20, 38, 0.66));
+  border-color: rgba(186, 218, 255, 0.24);
+  color: #f0f6fc;
+}
+
+.theme-night .pacing-pill {
+  background: rgba(24, 44, 76, 0.72);
+  border-color: rgba(186, 218, 255, 0.22);
+  color: #d6e8fb;
+}
+
+.theme-night .pacing-pill--slow {
+  background: rgba(110, 72, 22, 0.84);
+  border-color: rgba(255, 214, 148, 0.36);
+  color: #ffe0a8;
+}

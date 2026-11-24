@@ -19,6 +19,7 @@ import { playUiSound } from '../../services/uiSound';
 import { launchConfetti } from '../../ui/confetti';
 import { recordStudyActivity } from '../widgets/streakStore';
 import { ExamScratchpad, type ScratchStroke } from './ExamScratchpad';
+import { computePacingSummary, formatShortDuration } from './pacingUtils';
 import { recordExamMistakes } from './reviewStore';
 import './ExamsView.css';
 
@@ -49,10 +50,15 @@ export function ExamRunnerView({
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAttempt, setSubmittedAttempt] = useState<ExamAttempt | null>(null);
+  const [pacingSecondsMap, setPacingSecondsMap] = useState<Record<string, number>>({});
   const [onlyWrongFilter, setOnlyWrongFilter] = useState(false);
   const [scratchOpen, setScratchOpen] = useState(false);
   const [scratchStrokesByQ, setScratchStrokesByQ] = useState<Record<string, ScratchStroke[]>>({});
   const [scratchNotesByQ, setScratchNotesByQ] = useState<Record<string, string>>({});
+
+  const questionSecondsRef = useRef<Record<string, number>>({});
+  const activeQIdRef = useRef<string | null>(null);
+  const enteredAtMsRef = useRef<number | null>(null);
 
   const savedSession = progress.inProgressExams[examId];
   const mode: ExamMode = savedSession?.mode ?? initialMode;
@@ -125,10 +131,23 @@ export function ExamRunnerView({
     [examId, mode, onUpdateProgress],
   );
 
+  const flushQuestionTime = useCallback(() => {
+    const qId = activeQIdRef.current;
+    const entered = enteredAtMsRef.current;
+    if (qId && entered !== null) {
+      const deltaSec = Math.max(0, (Date.now() - entered) / 1000);
+      questionSecondsRef.current[qId] = (questionSecondsRef.current[qId] ?? 0) + deltaSec;
+      enteredAtMsRef.current = Date.now();
+    }
+  }, []);
+
   const handleSubmit = useCallback(
     (finalAnswers: Record<string, ChoiceKey>) => {
       if (!detail || submittedRef.current) return;
       submittedRef.current = true;
+      flushQuestionTime();
+      enteredAtMsRef.current = null;
+      setPacingSecondsMap({ ...questionSecondsRef.current });
 
       const grade = gradeExam(detail.exam, detail.questions, finalAnswers);
       const finishedAt = new Date().toISOString();
@@ -230,6 +249,32 @@ export function ExamRunnerView({
   const questions = detail?.questions ?? [];
   const currentQ = questions[currentIndex] ?? null;
 
+  // Track active seconds per question (pauses automatically when browser tab is hidden)
+  useEffect(() => {
+    if (submittedAttempt || !currentQ) {
+      flushQuestionTime();
+      activeQIdRef.current = null;
+      enteredAtMsRef.current = null;
+      return;
+    }
+    flushQuestionTime();
+    activeQIdRef.current = currentQ.id;
+    enteredAtMsRef.current = document.visibilityState === 'visible' ? Date.now() : null;
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        flushQuestionTime();
+        enteredAtMsRef.current = null;
+      } else if (!submittedRef.current) {
+        enteredAtMsRef.current = Date.now();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [currentQ?.id, submittedAttempt, flushQuestionTime]);
+
   const currentPromptHtml = useMemo(
     () => (currentQ ? renderQuestionMarkdown(currentQ.promptMd) : ''),
     [currentQ],
@@ -261,9 +306,20 @@ export function ExamRunnerView({
 
   // Review Mode (after submission)
   if (submittedAttempt) {
+    const pacing = computePacingSummary(
+      questions,
+      pacingSecondsMap,
+      detail.exam.durationMinutes,
+    );
+    const pacingByQ = new Map(pacing.rows.map((r) => [r.questionId, r]));
     const reviewRows = questions.map((q) => {
       const selected = submittedAttempt.answers?.[q.id] ?? null;
-      return { q, selected, isCorrect: selected === q.correctChoice };
+      return {
+        q,
+        selected,
+        isCorrect: selected === q.correctChoice,
+        pace: pacingByQ.get(q.id) ?? null,
+      };
     });
     const visibleRows = onlyWrongFilter
       ? reviewRows.filter((r) => !r.isCorrect)
@@ -309,6 +365,38 @@ export function ExamRunnerView({
           </div>
         </section>
 
+        <section className="review-pacing-card" aria-label="สถิติเวลาที่ใช้รายข้อ">
+          <div className="review-pacing-head">
+            <strong>⏱️ วิเคราะห์ความเร็วในการทำข้อสอบ</strong>
+            <div className="review-pacing-stats">
+              <span className="exam-chip">
+                เฉลี่ย {formatShortDuration(pacing.avgSecondsPerQ)}/ข้อ (เป้า {formatShortDuration(pacing.targetSecondsPerQ)})
+              </span>
+              {pacing.slowest && (
+                <span className="exam-chip exam-chip--resume">
+                  ใช้เวลานานสุด: ข้อ {pacing.slowest.order} ({formatShortDuration(pacing.slowest.seconds)})
+                </span>
+              )}
+              {pacing.overPaceCount > 0 && (
+                <span className="exam-chip exam-chip--fail">
+                  เกินจังหวะ {pacing.overPaceCount} ข้อ
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="review-pacing-strip">
+            {pacing.rows.map((row) => (
+              <span
+                key={row.questionId}
+                className={`pacing-pill${row.isOverPace ? ' pacing-pill--slow' : ''}`}
+                title={`ข้อ ${row.order}: ${formatShortDuration(row.seconds)}`}
+              >
+                ข้อ {row.order} · {formatShortDuration(row.seconds)}
+              </span>
+            ))}
+          </div>
+        </section>
+
         {visibleRows.length === 0 ? (
           <section className="review-item">
             <p style={{ fontWeight: 600, color: 'var(--status-pass)' }}>
@@ -316,10 +404,17 @@ export function ExamRunnerView({
             </p>
           </section>
         ) : (
-          visibleRows.map(({ q, selected, isCorrect }) => (
+          visibleRows.map(({ q, selected, isCorrect, pace }) => (
             <article key={q.id} className="review-item">
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
-                <strong>ข้อที่ {q.order}</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <strong>ข้อที่ {q.order}</strong>
+                  {pace && pace.seconds > 0 && (
+                    <span className={`exam-chip${pace.isOverPace ? ' exam-chip--resume' : ''}`}>
+                      ⏱️ {formatShortDuration(pace.seconds)}
+                    </span>
+                  )}
+                </div>
                 <span className={`exam-chip ${isCorrect ? 'exam-chip--pass' : 'exam-chip--fail'}`}>
                   {isCorrect
                     ? '✓ ตอบถูก'

@@ -5,11 +5,15 @@ import { playUiSound } from '../../services/uiSound';
 import { recordStudyActivity } from '../widgets/streakStore';
 import { OCSC_FLASHCARDS } from './flashcardData';
 import {
+  ERROR_CAUSE_OPTIONS,
   loadFlashcardSrsMap,
   loadMistakes,
   rateFlashcard,
   rateMistakeRecord,
   removeMistakeRecord,
+  summarizeErrorCauses,
+  tagMistakeRecord,
+  type ErrorCauseTag,
   type FlashcardSrsMap,
   type MistakeRecord,
 } from './reviewStore';
@@ -139,6 +143,16 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
   const handleRemoveMistake = (id: string) => {
     setMistakes(removeMistakeRecord(id));
   };
+
+  const handleTagMistake = (id: string, current: ErrorCauseTag | undefined, nextTag: ErrorCauseTag) => {
+    playUiSound('tap');
+    setMistakes(tagMistakeRecord(id, current === nextTag ? undefined : nextTag));
+  };
+
+  const errorCauseCounts = useMemo(
+    () => summarizeErrorCauses(filteredMistakes),
+    [filteredMistakes],
+  );
 
   const masteredCount = filteredCards.filter((c) => (srsMap[c.id]?.reps ?? 0) >= 2).length;
 
@@ -300,6 +314,15 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
         </div>
       ) : (
         <div className="mistake-list">
+          {ERROR_CAUSE_OPTIONS.some((opt) => errorCauseCounts[opt.tag] > 0) && (
+            <div className="mistake-cause-summary" aria-label="สรุปสาเหตุที่ตอบผิด">
+              {ERROR_CAUSE_OPTIONS.filter((opt) => errorCauseCounts[opt.tag] > 0).map((opt) => (
+                <span key={opt.tag} className="exam-chip">
+                  {opt.emoji} {opt.label}: {errorCauseCounts[opt.tag]}
+                </span>
+              ))}
+            </div>
+          )}
           {filteredMistakes.map((item) => {
             const revealed = Boolean(revealedMistakeIds[item.id]);
             const isDue = isSrsDue(item.srs, nowTick);
@@ -329,6 +352,23 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
                   >
                     ✓ จำได้แล้ว (เอาออก)
                   </button>
+                </div>
+
+                <div className="mistake-tag-row" role="group" aria-label="ระบุสาเหตุที่ตอบผิด">
+                  {ERROR_CAUSE_OPTIONS.map((opt) => {
+                    const active = item.errorTag === opt.tag;
+                    return (
+                      <button
+                        key={opt.tag}
+                        type="button"
+                        className={`mistake-tag-btn${active ? ' mistake-tag-btn--active' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => handleTagMistake(item.id, item.errorTag, opt.tag)}
+                      >
+                        {opt.emoji} {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div

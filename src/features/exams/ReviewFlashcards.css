@@ -327,3 +327,46 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Error-Cause Taxonomy Tag Pills */
+.mistake-cause-summary {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mistake-tag-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mistake-tag-btn {
+  min-height: 30px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid rgba(20, 48, 74, 0.14);
+  background: rgba(255, 255, 255, 0.66);
+  color: #2c465e;
+  font-size: 0.76rem;
+  font-weight: 600;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.mistake-tag-btn--active {
+  background: rgba(255, 241, 214, 0.94);
+  border-color: rgba(200, 125, 32, 0.5);
+  color: #8c4d08;
+}
+
+.theme-night .mistake-tag-btn {
+  background: rgba(24, 44, 76, 0.68);
+  border-color: rgba(186, 218, 255, 0.22);
+  color: #c8dcf2;
+}
+
+.theme-night .mistake-tag-btn--active {
+  background: rgba(110, 72, 22, 0.86);
+  border-color: rgba(255, 214, 148, 0.44);
+  color: #ffe2ad;
+}
