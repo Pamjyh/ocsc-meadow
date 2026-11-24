@@ -82,50 +82,29 @@ a {
   padding: 28px max(20px, env(safe-area-inset-left, 0px)) 88px max(20px, env(safe-area-inset-right, 0px));
 }
 
-/* Apply view-transition-name only during active page transitions so position:fixed modals are never trapped (F77) */
-.is-view-transitioning .app-main {
-  view-transition-name: app-main;
+/* Live GPU-composited page transition (keeps backdrop-filter Liquid Glass live at 60-120fps) */
+.route-stage {
+  will-change: transform, opacity;
+  animation: route-stage-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* View Transitions: keep WebGL background & floating nav rock-solid, smoothly glide main content */
-::view-transition-old(root),
-::view-transition-new(root) {
+@keyframes route-stage-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.focus-mode .route-stage {
   animation: none;
 }
 
-::view-transition-old(app-main) {
-  animation: vt-main-out 150ms cubic-bezier(0.4, 0, 1, 1) both;
-}
-
-::view-transition-new(app-main) {
-  animation: vt-main-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes vt-main-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes vt-main-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  ::view-transition-old(app-main),
-  ::view-transition-new(app-main) {
+  .route-stage {
     animation: none;
   }
   button:active:not(:disabled) {

@@ -53,9 +53,7 @@ import { ZenFocusOverlay } from './ui/ZenFocusOverlay';
 export function App() {
   const [bootstrap, setBootstrap] = useState<BootstrapPayload>(loadCachedBootstrap);
   const [progress, setProgress] = useState<UserProgress>(loadLocalProgress);
-  const { route, navigate } = useHashRoute({
-    enableViewTransition: !progress.preferences.focusMode,
-  });
+  const { route, navigate } = useHashRoute();
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('demo');
   const [hourFloat, setHourFloat] = useState<number>(() => getBangkokHourFloat());
   const [selectedExamMode, setSelectedExamMode] = useState<ExamMode>('timed');
@@ -537,53 +535,58 @@ export function App() {
           />
 
           <main className="app-main">
-            {route.name === 'dashboard' && (
-              <DashboardView
-                bootstrap={bootstrap}
-                progress={progress}
-                syncStatus={syncStatus}
-                onNavigate={navigate}
-                audio={audio}
-                onSelectTrack={handleSelectTrack}
-                onTogglePlay={handleTogglePlay}
-                onPrevTrack={handlePrevTrack}
-                onNextTrack={handleNextTrack}
-                onChangeVolume={handleChangeVolume}
-                onChangeLayer={handleChangeLayer}
-              />
-            )}
+            <div
+              key={route.name === 'exam-runner' ? `exam-runner:${route.examId}` : route.name}
+              className="route-stage"
+            >
+              {route.name === 'dashboard' && (
+                <DashboardView
+                  bootstrap={bootstrap}
+                  progress={progress}
+                  syncStatus={syncStatus}
+                  onNavigate={navigate}
+                  audio={audio}
+                  onSelectTrack={handleSelectTrack}
+                  onTogglePlay={handleTogglePlay}
+                  onPrevTrack={handlePrevTrack}
+                  onNextTrack={handleNextTrack}
+                  onChangeVolume={handleChangeVolume}
+                  onChangeLayer={handleChangeLayer}
+                />
+              )}
 
-            {route.name === 'study' && (
-              <StudyView
-                bootstrap={bootstrap}
-                progress={progress}
-                activeDocId={route.docId}
-                onNavigate={navigate}
-                onUpdateProgress={updateProgress}
-              />
-            )}
+              {route.name === 'study' && (
+                <StudyView
+                  bootstrap={bootstrap}
+                  progress={progress}
+                  activeDocId={route.docId}
+                  onNavigate={navigate}
+                  onUpdateProgress={updateProgress}
+                />
+              )}
 
-            {route.name === 'exams' && (
-              <ExamsHubView
-                bootstrap={bootstrap}
-                progress={progress}
-                activeTab={route.tab}
-                onNavigate={navigate}
-                onStartExam={handleStartExam}
-                onUpdateProgress={updateProgress}
-              />
-            )}
+              {route.name === 'exams' && (
+                <ExamsHubView
+                  bootstrap={bootstrap}
+                  progress={progress}
+                  activeTab={route.tab}
+                  onNavigate={navigate}
+                  onStartExam={handleStartExam}
+                  onUpdateProgress={updateProgress}
+                />
+              )}
 
-            {route.name === 'exam-runner' && (
-              <ExamRunnerView
-                key={route.examId}
-                examId={route.examId}
-                initialMode={selectedExamMode}
-                progress={progress}
-                onNavigate={navigate}
-                onUpdateProgress={updateProgress}
-              />
-            )}
+              {route.name === 'exam-runner' && (
+                <ExamRunnerView
+                  key={route.examId}
+                  examId={route.examId}
+                  initialMode={selectedExamMode}
+                  progress={progress}
+                  onNavigate={navigate}
+                  onUpdateProgress={updateProgress}
+                />
+              )}
+            </div>
           </main>
 
           <GlobalMusicDock

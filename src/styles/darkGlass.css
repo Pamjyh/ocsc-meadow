@@ -321,10 +321,7 @@
 }
 
 .theme-night .top-nav-link--active {
-  background: linear-gradient(180deg, rgba(52, 86, 134, 0.82), rgba(34, 60, 98, 0.72));
-  border-color: rgba(196, 224, 255, 0.36);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(4, 10, 24, 0.35);
 }
 
 .theme-night .top-nav-focus-btn {

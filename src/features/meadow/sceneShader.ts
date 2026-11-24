@@ -1,10 +1,10 @@
 /**
- * Zero-dependency WebGL 24-hour living-scene renderer for all 4 scenic backgrounds:
- * Mirrors meadowShader.ts with:
- * - C1-continuous 6-keyframe 24-hour atmosphere (Midnight -> Pre-Dawn -> Morning -> Day -> Sunset -> Twilight)
- * - Real painted drifting clouds (meadow-clouds.webp) smoothly tinted by the 24h cycle
- * - Continuous Sun/Moon orbital arcs, twinkling night stars, and night fireflies
- * - Natural per-scene motion: coherent breeze gusts (no jelly shear), drifting cloud sea, and floating pink petals
+ * Zero-dependency WebGL 24-hour living-scene renderer for 4 distinct iconic worlds:
+ * - Mode 1: Coastal Lighthouse & Turquoise Ocean (ocean 24h shimmer + rotating night lighthouse beam + cliff breeze)
+ * - Mode 2: Kyoto Crimson Bridge & Sakura Canal (falling sakura petals + canal shimmer + 4 glowing night stone lanterns)
+ * - Mode 3: Snowy Alpine Peaks & Cabin Mirror Lake (gentle snow + nighttime Aurora Borealis + warm cabin hearth glow)
+ * - Mode 4: Seaside Train Station & Shallow Ocean Tracks (shallow water sparkle + warm night platform lamp pool)
+ * All 4 share C1-continuous 6-keyframe 24h atmosphere, drifting painted clouds, Sun/Moon orbital arcs & stars.
  */
 
 const VERTEX_SHADER = `
@@ -55,12 +55,10 @@ vec2 coverUv(vec2 uv, vec2 canvasSize, vec2 imgSize) {
   } else {
     scale.x = canvasAspect / imgAspect;
   }
-  float x = (uv.x - 0.5) * scale.x + 0.5;
-  float y = (uv.y - 0.5) * scale.y + 0.5;
-  return vec2(x, y);
+  return vec2((uv.x - 0.5) * scale.x + 0.5, (uv.y - 0.5) * scale.y + 0.5);
 }
 
-// Smoothstep-eased interpolation between 6 circular 24-hour keyframes (matches meadowShader.ts):
+// 6 circular 24-hour keyframes:
 // K0: 00:00 Midnight | K1: 05:30 Pre-Dawn | K2: 07:00 Golden Morning
 // K3: 12:30 Cerulean Day | K4: 17:45 Golden Sunset | K5: 19:15 Twilight -> K0: 24:00
 vec3 sampleCycle(float h, vec3 k0, vec3 k1, vec3 k2, vec3 k3, vec3 k4, vec3 k5) {
@@ -81,107 +79,112 @@ float sampleCycle1(float h, float k0, float k1, float k2, float k3, float k4, fl
   return mix(k5, k0, smoothstep(19.25, 24.0, h));
 }
 
+float warmLampGlow(vec2 uv, vec2 pos, float radius, float aspect) {
+  float d = length((uv - pos) * vec2(aspect, 1.0));
+  return exp(-d / max(radius, 0.005));
+}
+
 void main() {
   vec2 uv = coverUv(vUv, uCanvasSize, uImgSize);
   float h = mod(uHour, 24.0);
   float aspect = uImgSize.x / max(uImgSize.y, 1.0);
 
-  // Per-scene horizon & natural coherent wind motion
-  float horizonY = 0.45;
+  float horizonY = 0.50;
   vec2 sampleUv = uv;
 
   if (uMode < 1.5) {
-    // Scene 1: Blue wildflower meadow (keep distant hills crisp; gentle rolling wind on foreground flowers)
-    horizonY = 0.41;
-    float flowerMask = smoothstep(0.50, 0.84, uv.y);
-    float gust = sin(uv.x * 3.8 - uTime * 1.10) * 0.65 + sin(uv.x * 7.2 - uTime * 1.55) * 0.35;
-    float swayX = gust * 0.0019 * flowerMask;
-    float swayY = cos(uv.x * 3.8 - uTime * 1.10) * 0.0005 * flowerMask;
-    sampleUv = clamp(uv + vec2(swayX, swayY), 0.001, 0.999);
+    // Mode 1: Coastal Lighthouse & Turquoise Ocean
+    horizonY = 0.568;
+    float cliffGrass = smoothstep(0.56, 0.72, uv.x) * smoothstep(0.45, 0.75, uv.y);
+    float gust = sin(uv.x * 4.5 - uTime * 1.15) * 0.65 + sin(uv.x * 8.0 - uTime * 1.65) * 0.35;
+    sampleUv = clamp(uv + vec2(gust * 0.0016 * cliffGrass, 0.0), 0.001, 0.999);
   } else if (uMode < 2.5) {
-    // Scene 2: Sea of clouds above river valley
-    // Keep the valley crisp; gently breathe only the bright foreground cloud puffs
+    // Mode 2: Kyoto Crimson Bridge & Sakura Canal
     horizonY = 0.46;
-    vec3 probe = texture2D(uTex, uv).rgb;
-    float isCloudPuff = smoothstep(0.68, 0.86, (probe.r + probe.g + probe.b) / 3.0) * smoothstep(0.42, 0.62, uv.y);
-    float puffDrift = sin(uv.x * 3.0 - uTime * 0.55) * 0.0042 * isCloudPuff;
-    float puffLift = cos(uv.x * 2.4 - uTime * 0.42) * 0.0018 * isCloudPuff;
-    sampleUv = clamp(uv + vec2(puffDrift, puffLift), 0.001, 0.999);
+    float canopy = smoothstep(0.16, 0.34, abs(uv.x - 0.5)) * smoothstep(0.58, 0.22, uv.y);
+    float breeze = sin(uTime * 0.85 + uv.x * 2.4) * 0.0012 * canopy;
+    sampleUv = clamp(uv + vec2(breeze, 0.0), 0.001, 0.999);
   } else if (uMode < 3.5) {
-    // Scene 3: Pink rhododendron hillside garden
-    // Coherent, ultra-gentle branch breeze on left/right foliage only (zero jelly shear, dirt path stays 100% still)
-    horizonY = mix(0.28, 0.48, exp(-pow((uv.x - 0.50) * 3.0, 2.0)));
-    float sideFoliage = smoothstep(0.10, 0.34, abs(uv.x - 0.55));
-    float pathExclusion = 1.0 - smoothstep(0.66, 0.84, uv.y) * (1.0 - smoothstep(0.06, 0.22, abs(uv.x - 0.56)));
-    float upperCanopy = smoothstep(0.96, 0.35, uv.y) * smoothstep(0.08, 0.26, uv.y);
-    float branchMask = sideFoliage * pathExclusion * upperCanopy;
-    float breeze = sin(uTime * 0.85 + uv.x * 2.1) * 0.7 + sin(uTime * 1.35 - uv.x * 1.4) * 0.3;
-    float swayX = breeze * 0.0013 * branchMask;
-    float swayY = cos(uTime * 0.85 + uv.x * 2.1) * 0.0004 * branchMask;
-    sampleUv = clamp(uv + vec2(swayX, swayY), 0.001, 0.999);
+    // Mode 3: Snowy Alpine Peaks & Cabin Mirror Lake (crisp peaks, ultra-subtle mirror water ripple)
+    horizonY = 0.48;
+    float lakeRippleMask = smoothstep(0.71, 0.78, uv.y) * smoothstep(0.18, 0.34, uv.x);
+    float rip = sin(uv.y * 95.0 - uTime * 1.4 + uv.x * 12.0) * 0.0009 * lakeRippleMask;
+    sampleUv = clamp(uv + vec2(rip, 0.0), 0.001, 0.999);
   } else {
-    // Scene 4: Hilltop meadow overlooking lake & cumulus clouds (keep valley & lake crisp; sway foreground hill grass)
-    horizonY = 0.60;
-    float lakeHole = 1.0 - smoothstep(0.24, 0.30, uv.x) * (1.0 - smoothstep(0.58, 0.65, uv.x)) * smoothstep(0.68, 0.73, uv.y) * (1.0 - smoothstep(0.79, 0.84, uv.y));
-    float grassMask = smoothstep(0.70, 0.88, uv.y) * lakeHole;
-    float gust = sin(uv.x * 4.2 - uTime * 1.35) * 0.68 + sin(uv.x * 8.4 - uTime * 1.85) * 0.32;
-    float grassSway = gust * 0.0024 * grassMask;
-    float grassY = cos(uv.x * 4.2 - uTime * 1.15) * 0.0006 * grassMask;
-    sampleUv = clamp(uv + vec2(grassSway, grassY), 0.001, 0.999);
+    // Mode 4: Seaside Train Station & Shallow Ocean Tracks
+    horizonY = 0.518;
+    float waterMask = smoothstep(0.52, 0.58, uv.y) * smoothstep(0.32, 0.44, uv.x);
+    float wave = sin(uv.y * 65.0 - uTime * 1.5 + uv.x * 9.0) * 0.0011 * waterMask;
+    sampleUv = clamp(uv + vec2(wave, 0.0), 0.001, 0.999);
   }
 
   vec3 baseCol = texture2D(uTex, sampleUv).rgb;
 
-  // Detect sky pixels smoothly using horizon + sky-blue/bright-cloud luminance heuristic (F63)
-  float aboveHorizon = 1.0 - smoothstep(horizonY - 0.10, horizonY + 0.06, uv.y);
-  float blueDominance = smoothstep(-0.04, 0.14, baseCol.b - max(baseCol.r, baseCol.g) * 0.85);
-  float brightCloud = smoothstep(0.68, 0.92, (baseCol.r + baseCol.g + baseCol.b) / 3.0);
-  float skyMask = aboveHorizon * clamp(blueDominance + brightCloud * 0.90, 0.0, 1.0);
+  // Detect sky pixels smoothly using horizon + sky-blue / bright-cloud heuristic
+  float aboveHorizon = 1.0 - smoothstep(horizonY - 0.08, horizonY + 0.05, uv.y);
+  float blueDominance = smoothstep(-0.04, 0.13, baseCol.b - max(baseCol.r, baseCol.g) * 0.85);
+  float brightCloud = smoothstep(0.70, 0.93, (baseCol.r + baseCol.g + baseCol.b) / 3.0);
+  // Protect white lighthouse tower (Mode 1) and snow peaks (Mode 3) from sky grading
+  float structureProtect = 1.0;
+  if (uMode < 1.5) {
+    float inTower = smoothstep(0.77, 0.80, uv.x) * (1.0 - smoothstep(0.855, 0.885, uv.x)) * smoothstep(0.03, 0.09, uv.y);
+    structureProtect = 1.0 - inTower * 0.95;
+  } else if (uMode > 2.5 && uMode < 3.5) {
+    // Keep bright snowy alpine peaks below ridge line graded as ground, not sky
+    float peakMask = smoothstep(0.24, 0.46, uv.y) * (1.0 - blueDominance);
+    structureProtect = 1.0 - peakMask * 0.85;
+  } else if (uMode > 3.5) {
+    // Protect vintage station roof & lamp post on left third
+    float inStation = (1.0 - smoothstep(0.30, 0.36, uv.x)) * smoothstep(0.08, 0.14, uv.y);
+    structureProtect = 1.0 - inStation * 0.85;
+  }
+  float skyMask = aboveHorizon * clamp(blueDominance + brightCloud * 0.88, 0.0, 1.0) * structureProtect;
 
-  // Continuous 24-hour palette (matches meadowShader.ts)
+  // Continuous 24-hour palette
   vec3 skyZenith = sampleCycle(
     h,
-    vec3(0.04, 0.08, 0.19),
+    vec3(0.03, 0.07, 0.18),
     vec3(0.16, 0.24, 0.44),
     vec3(0.36, 0.62, 0.86),
     vec3(0.24, 0.58, 0.86),
     vec3(0.24, 0.34, 0.62),
-    vec3(0.09, 0.15, 0.32)
+    vec3(0.08, 0.14, 0.30)
   );
   vec3 skyHorizon = sampleCycle(
     h,
-    vec3(0.11, 0.20, 0.36),
+    vec3(0.10, 0.19, 0.35),
     vec3(0.76, 0.52, 0.54),
     vec3(0.99, 0.82, 0.70),
     vec3(0.76, 0.90, 0.96),
-    vec3(0.98, 0.58, 0.38),
-    vec3(0.26, 0.28, 0.48)
+    vec3(0.98, 0.56, 0.36),
+    vec3(0.24, 0.26, 0.46)
   );
-  float skyGradeAmt = sampleCycle1(h, 0.78, 0.72, 0.46, 0.0, 0.70, 0.76);
+  float skyGradeAmt = sampleCycle1(h, 0.82, 0.72, 0.46, 0.0, 0.72, 0.78);
 
   vec3 groundTint = sampleCycle(
     h,
-    vec3(0.28, 0.38, 0.56),
-    vec3(0.64, 0.58, 0.65),
+    vec3(0.26, 0.36, 0.54),
+    vec3(0.64, 0.58, 0.66),
     vec3(1.04, 0.96, 0.90),
     vec3(1.00, 1.00, 1.00),
-    vec3(1.08, 0.80, 0.64),
-    vec3(0.44, 0.48, 0.66)
+    vec3(1.08, 0.78, 0.62),
+    vec3(0.42, 0.46, 0.64)
   );
   vec3 cloudTint = sampleCycle(
     h,
-    vec3(0.24, 0.34, 0.54),
+    vec3(0.22, 0.32, 0.52),
     vec3(0.74, 0.60, 0.68),
     vec3(1.05, 0.93, 0.86),
     vec3(1.00, 1.00, 1.00),
-    vec3(1.10, 0.74, 0.58),
-    vec3(0.40, 0.44, 0.66)
+    vec3(1.10, 0.72, 0.56),
+    vec3(0.38, 0.42, 0.64)
   );
-  float cloudAlphaScale = sampleCycle1(h, 0.68, 0.82, 0.96, 1.0, 0.98, 0.78);
-  float nightStrength = sampleCycle1(h, 1.0, 0.55, 0.0, 0.0, 0.05, 0.82);
+  float cloudAlphaScale = sampleCycle1(h, 0.64, 0.80, 0.94, 1.0, 0.96, 0.74);
+  float nightStrength = sampleCycle1(h, 1.0, 0.55, 0.0, 0.0, 0.08, 0.84);
+  float duskLampStrength = sampleCycle1(h, 1.0, 0.68, 0.08, 0.0, 0.52, 0.92);
 
-  // Grade sky while preserving painted cloud shading
-  float horizonT = smoothstep(0.04, max(horizonY, 0.25), uv.y);
+  // Grade sky while preserving painted cloud depth
+  float horizonT = smoothstep(0.04, max(horizonY, 0.28), uv.y);
   vec3 targetSky = mix(skyZenith, skyHorizon, horizonT);
   float luma = dot(baseCol, vec3(0.299, 0.587, 0.114));
   vec3 cloudLitSky = targetSky * mix(0.78, 1.24, smoothstep(0.42, 0.95, luma));
@@ -192,12 +195,12 @@ void main() {
   float sunElev = sin(sunT * 3.14159265);
   float sunVis = smoothstep(5.1, 6.1, h) * (1.0 - smoothstep(18.0, 19.0, h));
   if (sunVis > 0.005) {
-    vec2 sunPos = vec2(mix(0.84, 0.16, sunT), horizonY - 0.04 - sunElev * (horizonY * 0.72));
+    vec2 sunPos = vec2(mix(0.82, 0.18, sunT), horizonY - 0.05 - sunElev * (horizonY * 0.70));
     float dSun = length((uv - sunPos) * vec2(aspect, 1.0));
     float lowSun = 1.0 - smoothstep(0.12, 0.65, sunElev);
-    float sunDisc = smoothstep(0.050, 0.025, dSun) * (0.25 + 0.75 * lowSun);
+    float sunDisc = smoothstep(0.048, 0.024, dSun) * (0.25 + 0.75 * lowSun);
     float sunHalo = exp(-dSun * mix(5.5, 3.6, lowSun)) * (0.16 + 0.42 * lowSun);
-    vec3 sunCol = mix(vec3(1.0, 0.98, 0.90), vec3(1.0, 0.68, 0.40), lowSun);
+    vec3 sunCol = mix(vec3(1.0, 0.98, 0.90), vec3(1.0, 0.66, 0.38), lowSun);
     gradedSky += sunCol * (sunDisc * 0.68 + sunHalo) * sunVis * skyMask;
   }
 
@@ -206,13 +209,12 @@ void main() {
     float moonH = h >= 18.0 ? (h - 18.0) : (h + 6.0);
     float moonT = clamp(moonH / 12.0, 0.0, 1.0);
     float moonElev = sin(moonT * 3.14159265);
-    vec2 moonPos = vec2(mix(0.82, 0.18, moonT), horizonY - 0.05 - moonElev * (horizonY * 0.64));
+    vec2 moonPos = vec2(mix(0.78, 0.22, moonT), horizonY - 0.06 - moonElev * (horizonY * 0.62));
     float dMoon = length((uv - moonPos) * vec2(aspect, 1.0));
-    float moonDisc = smoothstep(0.040, 0.031, dMoon);
-    float moonHalo = exp(-dMoon * 5.8) * 0.32;
-    gradedSky += vec3(0.93, 0.96, 1.0) * (moonDisc * 0.86 + moonHalo) * nightStrength * skyMask;
+    float moonDisc = smoothstep(0.038, 0.029, dMoon);
+    float moonHalo = exp(-dMoon * 5.8) * 0.30;
+    gradedSky += vec3(0.93, 0.96, 1.0) * (moonDisc * 0.84 + moonHalo) * nightStrength * skyMask;
 
-    // Twinkling stars
     vec2 starGrid = uv * vec2(96.0, 54.0);
     vec2 cell = floor(starGrid);
     vec2 f = fract(starGrid) - 0.5;
@@ -220,83 +222,132 @@ void main() {
     if (rnd > 0.942) {
       float starDist = length(f);
       float twinkle = 0.55 + 0.45 * sin(uTime * (1.6 + rnd * 3.2) + rnd * 40.0);
-      float star = smoothstep(0.18, 0.02, starDist) * twinkle * smoothstep(horizonY, 0.08, uv.y);
+      float star = smoothstep(0.18, 0.02, starDist) * twinkle * smoothstep(horizonY, 0.06, uv.y);
       gradedSky += vec3(0.92, 0.96, 1.0) * star * nightStrength * skyMask;
     }
   }
 
+  // Mode 3 (Snowy Alpine Peaks): Shimmering nighttime Aurora Borealis across the upper sky
+  if (uMode > 2.5 && uMode < 3.5 && nightStrength > 0.08) {
+    float bandY = 0.17 + 0.05 * sin(uv.x * 5.2 + uTime * 0.28) + 0.03 * cos(uv.x * 9.0 - uTime * 0.19);
+    float ribbon = exp(-pow((uv.y - bandY) * 11.0, 2.0));
+    float curtain = 0.55 + 0.45 * vnoise(vec2(uv.x * 10.0 - uTime * 0.22, uv.y * 3.5));
+    float aurora = ribbon * curtain * skyMask * nightStrength;
+    vec3 auroraCol = mix(vec3(0.18, 0.92, 0.68), vec3(0.56, 0.46, 0.96), smoothstep(0.08, 0.30, uv.y));
+    gradedSky += auroraCol * aurora * 0.58;
+  }
+
   vec3 groundCol = baseCol * groundTint;
 
-  // Scene 4 (Mountain Lake): organic 24h water shimmer across the valley lake
-  if (uMode > 3.5) {
-    float inLakeBox = smoothstep(0.25, 0.31, uv.x) * (1.0 - smoothstep(0.57, 0.64, uv.x))
-                    * smoothstep(0.70, 0.73, uv.y) * (1.0 - smoothstep(0.78, 0.82, uv.y));
-    float isWater = smoothstep(0.56, 0.78, luma) * smoothstep(-0.02, 0.08, baseCol.b - baseCol.g * 0.92);
-    float lakeMask = inLakeBox * isWater;
-    if (lakeMask > 0.01) {
-      float rip1 = vnoise(vec2(uv.x * 54.0 - uTime * 0.9, uv.y * 92.0 + uTime * 0.3));
-      float rip2 = vnoise(vec2(uv.x * 86.0 + uTime * 0.6, uv.y * 128.0 - uTime * 0.4));
-      float sparkle = smoothstep(0.62, 0.92, rip1 * 0.55 + rip2 * 0.45) * lakeMask;
-      vec3 sheenTint = sampleCycle(
-        h,
-        vec3(0.76, 0.88, 1.00),
-        vec3(0.98, 0.82, 0.74),
-        vec3(1.00, 0.95, 0.84),
-        vec3(0.98, 1.00, 1.00),
-        vec3(1.00, 0.78, 0.54),
-        vec3(0.80, 0.86, 1.00)
-      );
-      groundCol = mix(groundCol, sheenTint, sparkle * 0.48);
+  // Shared 24h water shimmer tint
+  vec3 sheenTint = sampleCycle(
+    h,
+    vec3(0.76, 0.88, 1.00),
+    vec3(0.98, 0.80, 0.72),
+    vec3(1.00, 0.95, 0.84),
+    vec3(0.98, 1.00, 1.00),
+    vec3(1.00, 0.76, 0.50),
+    vec3(0.78, 0.86, 1.00)
+  );
+
+  // Per-scene water shimmer & nighttime lighting
+  if (uMode < 1.5) {
+    // Mode 1: Ocean shimmer left of cliffs
+    float oceanMask = smoothstep(0.568, 0.60, uv.y) * (1.0 - smoothstep(0.52, 0.64, uv.x));
+    if (oceanMask > 0.01) {
+      float r1 = vnoise(vec2(uv.x * 48.0 - uTime * 0.85, uv.y * 86.0 + uTime * 0.25));
+      float r2 = vnoise(vec2(uv.x * 78.0 + uTime * 0.55, uv.y * 120.0 - uTime * 0.35));
+      float sparkle = smoothstep(0.60, 0.90, r1 * 0.55 + r2 * 0.45) * oceanMask;
+      groundCol = mix(groundCol, sheenTint, sparkle * 0.42);
+    }
+  } else if (uMode < 2.5) {
+    // Mode 2: Canal shimmer under crimson bridge
+    float canalMask = smoothstep(0.70, 0.78, uv.y) * smoothstep(0.10, 0.24, uv.x) * (1.0 - smoothstep(0.76, 0.90, uv.x));
+    if (canalMask > 0.01) {
+      float r1 = vnoise(vec2(uv.x * 42.0 - uTime * 0.6, uv.y * 74.0 + uTime * 0.25));
+      float sparkle = smoothstep(0.62, 0.90, r1) * canalMask;
+      groundCol = mix(groundCol, sheenTint, sparkle * 0.32);
+    }
+  } else if (uMode < 3.5) {
+    // Mode 3: Subtle aurora reflection + warm hearth light on mirror lake at night
+    float lakeMask = smoothstep(0.72, 0.78, uv.y) * smoothstep(0.20, 0.36, uv.x);
+    if (lakeMask > 0.01 && nightStrength > 0.08) {
+      float shimmer = 0.5 + 0.5 * sin(uv.x * 16.0 + uTime * 0.65);
+      groundCol += vec3(0.14, 0.65, 0.52) * shimmer * lakeMask * nightStrength * 0.16;
+    }
+  } else {
+    // Mode 4: Shallow crystal turquoise water sparkle along ocean horizon & tracks
+    float seaMask = smoothstep(0.52, 0.56, uv.y) * smoothstep(0.32, 0.46, uv.x);
+    if (seaMask > 0.01) {
+      float r1 = vnoise(vec2(uv.x * 56.0 - uTime * 0.95, uv.y * 92.0 + uTime * 0.3));
+      float r2 = vnoise(vec2(uv.x * 90.0 + uTime * 0.65, uv.y * 130.0 - uTime * 0.4));
+      float sparkle = smoothstep(0.58, 0.88, r1 * 0.55 + r2 * 0.45) * seaMask;
+      groundCol = mix(groundCol, sheenTint, sparkle * 0.46);
     }
   }
 
   vec3 finalRgb = mix(groundCol, gradedSky, skyMask);
 
-  // Drifting painted cumulus clouds (uCloudTex) smoothly tinted by 24h cycle
-  if (uMode > 1.5 && uMode < 2.5) {
-    // Scene 2 (Sea of Clouds): 2 lush gliding cloud layers across sky + drifting sea mist over lower clouds
-    float upperBand = smoothstep(0.56, 0.36, uv.y);
-    if (upperBand > 0.005) {
-      float cy = clamp(uv.y / 0.54, 0.002, 0.998);
-      float d1 = fract(uv.x - uTime * 0.013);
-      float d2 = fract(uv.x * 0.85 + 0.48 - uTime * 0.0075);
-      vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
-      vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.08 + 0.04, 0.002, 0.998)));
-      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.42 * upperBand * cloudAlphaScale);
-      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.68 * upperBand * cloudAlphaScale);
-    }
+  // Drifting painted cumulus clouds tinted by 24h cycle
+  float skyCloudRange = max(horizonY + 0.02, 0.38);
+  if (uv.y < skyCloudRange && skyMask > 0.02) {
+    float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
+    float d1 = fract(uv.x - uTime * 0.009);
+    float d2 = fract(uv.x * 0.88 + 0.46 - uTime * 0.005);
+    vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
+    vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.06 + 0.03, 0.002, 0.998)));
+    finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.22 * skyMask * cloudAlphaScale);
+    finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.36 * skyMask * cloudAlphaScale);
+  }
 
-    // Soft drifting mist wisps gliding continuously over the lower sea of clouds
-    if (uv.y > 0.38) {
-      float seaBand = smoothstep(0.38, 0.58, uv.y);
-      float mist1 = vnoise(vec2(uv.x * 4.5 - uTime * 0.16, uv.y * 5.0));
-      float mist2 = vnoise(vec2(uv.x * 8.0 - uTime * 0.24 + 3.1, uv.y * 7.5 + 1.4));
-      float mist = smoothstep(0.46, 0.84, mist1 * 0.6 + mist2 * 0.4) * seaBand;
-      vec3 mistCol = vec3(0.98, 0.99, 1.0) * cloudTint;
-      finalRgb = mix(finalRgb, mistCol, mist * 0.24 * cloudAlphaScale);
-    }
-  } else {
-    // Scenes 1, 3, 4: 2-layer painted cumulus clouds drifting smoothly inside skyMask
-    float skyCloudRange = max(horizonY + 0.04, 0.36);
-    if (uv.y < skyCloudRange && skyMask > 0.02) {
-      float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
-      float d1 = fract(uv.x - uTime * 0.0095);
-      float d2 = fract(uv.x * 0.90 + 0.45 - uTime * 0.0052);
-      vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
-      vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.06 + 0.03, 0.002, 0.998)));
-      float s1 = uMode > 2.5 && uMode < 3.5 ? 0.36 : 0.42;
-      float s2 = uMode > 2.5 && uMode < 3.5 ? 0.20 : 0.24;
-      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * s2 * skyMask * cloudAlphaScale);
-      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * s1 * skyMask * cloudAlphaScale);
+  // Signature 24h practical lights turning on at dusk & night per scene!
+  if (duskLampStrength > 0.02) {
+    if (uMode < 1.5) {
+      // Mode 1: Rotating Coastal Lighthouse Beam sweeping from lantern room (0.823, 0.112)
+      vec2 lamp = vec2(0.823, 0.112);
+      vec2 rel = (uv - lamp) * vec2(aspect, 1.0);
+      float dist = length(rel);
+      float core = exp(-dist * 24.0) * 1.15 + exp(-dist * 7.5) * 0.35;
+      float beamAngle = -2.75 + sin(uTime * 0.55) * 0.34;
+      vec2 dir = vec2(cos(beamAngle), sin(beamAngle));
+      float along = dot(rel, dir);
+      float perp = abs(rel.x * (-dir.y) + rel.y * dir.x);
+      float coneWidth = 0.018 + max(along, 0.0) * 0.16;
+      float beam = smoothstep(coneWidth, coneWidth * 0.15, perp) * smoothstep(0.0, 0.04, along) * exp(-max(along, 0.0) * 1.15);
+      finalRgb += vec3(1.0, 0.92, 0.70) * (core + beam * 0.52) * duskLampStrength;
+    } else if (uMode < 2.5) {
+      // Mode 2: 4 glowing Kyoto stone lanterns + warm canal reflections
+      float flicker = 0.92 + 0.08 * sin(uTime * 4.5 + uv.x * 18.0);
+      float g1 = warmLampGlow(uv, vec2(0.072, 0.680), 0.055, aspect);
+      float g2 = warmLampGlow(uv, vec2(0.197, 0.635), 0.036, aspect);
+      float g3 = warmLampGlow(uv, vec2(0.842, 0.648), 0.036, aspect);
+      float g4 = warmLampGlow(uv, vec2(0.938, 0.692), 0.058, aspect);
+      float glow = (g1 + g2 * 0.75 + g3 * 0.75 + g4) * flicker;
+      finalRgb += vec3(1.0, 0.74, 0.34) * glow * 0.72 * duskLampStrength;
+    } else if (uMode < 3.5) {
+      // Mode 3: Warm golden alpine cabin windows + cozy snow reflection
+      float w1 = warmLampGlow(uv, vec2(0.136, 0.722), 0.028, aspect);
+      float w2 = warmLampGlow(uv, vec2(0.162, 0.722), 0.028, aspect);
+      float w3 = warmLampGlow(uv, vec2(0.214, 0.722), 0.034, aspect);
+      float w4 = warmLampGlow(uv, vec2(0.214, 0.665), 0.022, aspect);
+      float hearth = (w1 + w2 + w3 + w4 * 0.7) * (0.94 + 0.06 * sin(uTime * 3.2));
+      finalRgb += vec3(1.0, 0.76, 0.36) * hearth * 0.78 * duskLampStrength;
+    } else {
+      // Mode 4: Classic Seaside Train Station lamp glow at (0.166, 0.195) + warm pool on wooden bench
+      float bulb = warmLampGlow(uv, vec2(0.166, 0.195), 0.048, aspect);
+      float halo = warmLampGlow(uv, vec2(0.166, 0.24), 0.18, aspect);
+      float benchPool = warmLampGlow(uv, vec2(0.20, 0.60), 0.16, aspect);
+      finalRgb += vec3(1.0, 0.80, 0.44) * (bulb * 0.95 + halo * 0.34 + benchPool * 0.22) * duskLampStrength;
     }
   }
 
-  // Floating drifting petals (Scene 1: pale blue wildflowers, Scene 3: pink blossoms)
-  if (uMode < 1.5 || (uMode > 2.5 && uMode < 3.5)) {
-    vec2 pGrid = uv * vec2(9.0, 5.5) + vec2(-uTime * 0.18, -uTime * 0.10);
+  // Per-scene atmospheric particles:
+  // Mode 2: Falling pink sakura petals
+  if (uMode > 1.5 && uMode < 2.5) {
+    vec2 pGrid = uv * vec2(9.5, 5.8) + vec2(-uTime * 0.16, -uTime * 0.14);
     vec2 pCell = floor(pGrid);
     float r = hash21(pCell + vec2(4.3, 8.7));
-    if (r > 0.78) {
+    if (r > 0.76) {
       vec2 center = vec2(
         0.5 + 0.28 * sin(uTime * (0.9 + r * 0.5) + r * 19.0),
         0.5 + 0.26 * cos(uTime * (0.7 + r * 0.4) + r * 13.0)
@@ -307,42 +358,23 @@ void main() {
       float sa = sin(ang);
       vec2 rd = vec2(d.x * ca - d.y * sa, (d.x * sa + d.y * ca) * 1.9);
       float petal = smoothstep(0.11, 0.025, length(rd));
-      vec3 basePetal = uMode < 1.5 ? vec3(0.84, 0.93, 1.0) : vec3(1.0, 0.78, 0.86);
-      vec3 petalCol = basePetal * mix(groundTint, vec3(1.0), 0.35);
-      finalRgb = mix(finalRgb, petalCol, petal * 0.62);
+      vec3 petalCol = vec3(1.0, 0.80, 0.88) * mix(groundTint, vec3(1.0), 0.4);
+      finalRgb = mix(finalRgb, petalCol, petal * 0.68);
     }
   }
 
-  // Scene 4 (Hilltop Meadow): gentle sunlit pollen / breeze motes drifting during day & sunset
-  if (uMode > 3.5 && nightStrength < 0.75) {
-    vec2 mGrid = uv * vec2(11.0, 6.5) + vec2(-uTime * 0.15, -uTime * 0.04);
-    vec2 mCell = floor(mGrid);
-    float r = hash21(mCell + vec2(9.2, 5.4));
-    if (r > 0.80) {
+  // Mode 3: Delicate winter snowflakes drifting gently
+  if (uMode > 2.5 && uMode < 3.5) {
+    vec2 sGrid = uv * vec2(15.0, 9.0) + vec2(-uTime * 0.09, -uTime * 0.24);
+    vec2 sCell = floor(sGrid);
+    float r = hash21(sCell + vec2(7.1, 2.9));
+    if (r > 0.72) {
       vec2 center = vec2(
-        0.5 + 0.30 * sin(uTime * (0.8 + r * 0.4) + r * 17.0),
-        0.5 + 0.26 * cos(uTime * (0.6 + r * 0.4) + r * 23.0)
+        0.5 + 0.26 * sin(uTime * (0.8 + r * 0.4) + r * 21.0),
+        0.5 + 0.22 * cos(uTime * (0.6 + r * 0.3) + r * 11.0)
       );
-      float d = length(fract(mGrid) - center);
-      float mote = exp(-d * 16.0) * smoothstep(0.45, 0.75, uv.y) * (1.0 - nightStrength);
-      finalRgb += vec3(1.0, 0.97, 0.84) * mote * 0.42;
-    }
-  }
-
-  // Night fireflies drifting softly over meadow/garden foliage (skip high-altitude cloud sea Mode 2) (F64)
-  if (nightStrength > 0.12 && uv.y > horizonY + 0.10 && (uMode < 1.5 || uMode > 2.5)) {
-    vec2 ffGrid = uv * vec2(18.0, 10.0);
-    vec2 ffCell = floor(ffGrid);
-    float r = hash21(ffCell + vec2(11.7, 3.3));
-    if (r > 0.80) {
-      vec2 center = vec2(
-        0.5 + 0.30 * sin(uTime * (0.55 + r * 0.5) + r * 19.0),
-        0.5 + 0.26 * cos(uTime * (0.45 + r * 0.4) + r * 27.0)
-      );
-      float d = length(fract(ffGrid) - center);
-      float pulse = 0.35 + 0.65 * (0.5 + 0.5 * sin(uTime * (1.8 + r * 2.0) + r * 31.0));
-      float glow = exp(-d * 14.0) * pulse * smoothstep(horizonY + 0.10, horizonY + 0.24, uv.y);
-      finalRgb += vec3(1.0, 0.90, 0.48) * glow * 0.85 * nightStrength;
+      float flake = smoothstep(0.095, 0.02, length(fract(sGrid) - center));
+      finalRgb = mix(finalRgb, vec3(0.96, 0.98, 1.0), flake * 0.65);
     }
   }
 

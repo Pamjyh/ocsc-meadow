@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import {
   getSceneOption,
   SCENE_CATALOG,
@@ -36,9 +36,30 @@ export function TopNav({
   onOpenCommandPalette,
 }: TopNavProps) {
   const isExams = route.name === 'exams' || route.name === 'exam-runner';
+  const activeTabKey = route.name === 'study' ? 'study' : isExams ? 'exams' : 'dashboard';
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerWrapRef = useRef<HTMLDivElement | null>(null);
+  const navLinksRef = useRef<HTMLElement | null>(null);
+  const [pillStyle, setPillStyle] = useState<{ x: number; w: number; ready: boolean }>({
+    x: 0,
+    w: 0,
+    ready: false,
+  });
   const activeScene = getSceneOption(sceneId);
+
+  // Measure active tab button for silky sliding Liquid Glass pill
+  useLayoutEffect(() => {
+    const updatePill = () => {
+      const nav = navLinksRef.current;
+      if (!nav) return;
+      const activeBtn = nav.querySelector<HTMLButtonElement>(`[data-nav-tab="${activeTabKey}"]`);
+      if (!activeBtn) return;
+      setPillStyle({ x: activeBtn.offsetLeft, w: activeBtn.offsetWidth, ready: true });
+    };
+    updatePill();
+    window.addEventListener('resize', updatePill);
+    return () => window.removeEventListener('resize', updatePill);
+  }, [activeTabKey]);
 
   useEffect(() => {
     if (!pickerOpen) return;
@@ -73,9 +94,20 @@ export function TopNav({
           <span>{siteTitle}</span>
         </button>
 
-        <nav className="top-nav-links" aria-label="เมนูหลัก">
+        <nav className="top-nav-links" aria-label="เมนูหลัก" ref={navLinksRef}>
+          {pillStyle.ready && (
+            <span
+              className="top-nav-active-pill"
+              aria-hidden="true"
+              style={{
+                width: `${pillStyle.w}px`,
+                transform: `translate3d(${pillStyle.x}px, 0, 0)`,
+              }}
+            />
+          )}
           <button
             type="button"
+            data-nav-tab="dashboard"
             className={`top-nav-link${route.name === 'dashboard' ? ' top-nav-link--active' : ''}`}
             onClick={() => onNavigate({ name: 'dashboard' })}
           >
@@ -84,6 +116,7 @@ export function TopNav({
           </button>
           <button
             type="button"
+            data-nav-tab="study"
             className={`top-nav-link${route.name === 'study' ? ' top-nav-link--active' : ''}`}
             onClick={() => onNavigate({ name: 'study', docId: null })}
           >
@@ -92,6 +125,7 @@ export function TopNav({
           </button>
           <button
             type="button"
+            data-nav-tab="exams"
             className={`top-nav-link${isExams ? ' top-nav-link--active' : ''}`}
             onClick={() => onNavigate({ name: 'exams', tab: 'interactive' })}
           >

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 
 export type AppRoute =
   | { name: 'dashboard' }
@@ -56,21 +55,7 @@ export function isSameRoute(a: AppRoute, b: AppRoute): boolean {
   return true;
 }
 
-type ViewTransitionDocument = Document & {
-  startViewTransition?: (updateCallback: () => void) => { finished: Promise<void> };
-};
-
-function canRunViewTransition(enabled: boolean): boolean {
-  if (!enabled || typeof document === 'undefined' || typeof window === 'undefined') {
-    return false;
-  }
-  const doc = document as ViewTransitionDocument;
-  if (typeof doc.startViewTransition !== 'function') return false;
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
-  return true;
-}
-
-export function useHashRoute(options?: { enableViewTransition?: boolean }): {
+export function useHashRoute(): {
   route: AppRoute;
   navigate: (next: AppRoute) => void;
 } {
@@ -79,9 +64,6 @@ export function useHashRoute(options?: { enableViewTransition?: boolean }): {
   );
   const routeRef = useRef(route);
   routeRef.current = route;
-  const activeVtCountRef = useRef(0);
-  const enableVtRef = useRef(options?.enableViewTransition ?? true);
-  enableVtRef.current = options?.enableViewTransition ?? true;
 
   useEffect(() => {
     const onHashChange = () => {
@@ -93,54 +75,20 @@ export function useHashRoute(options?: { enableViewTransition?: boolean }): {
   }, []);
 
   const navigate = useCallback((next: AppRoute) => {
-    // Skip redundant view transition when clicking the already-active route (F78)
     if (isSameRoute(routeRef.current, next)) return;
 
+    const prevName = routeRef.current.name;
     const targetHash = buildHash(next);
-    const apply = () => {
-      if (window.location.hash !== targetHash) {
-        window.location.hash = targetHash;
-      }
-      routeRef.current = next;
-      setRoute((prev) => (isSameRoute(prev, next) ? prev : next));
-    };
-
-    if (canRunViewTransition(enableVtRef.current)) {
-      const doc = document as ViewTransitionDocument;
-      const root = document.documentElement;
-      try {
-        // Only apply view-transition-name during active swap so position:fixed modals stay viewport-anchored (F77)
-        activeVtCountRef.current += 1;
-        root.classList.add('is-view-transitioning');
-        const vt = doc.startViewTransition?.(() => {
-          flushSync(apply);
-        });
-        if (vt?.finished) {
-          void vt.finished
-            .catch(() => {
-              // Ignore AbortError when user clicks another tab mid-transition (F78)
-            })
-            .finally(() => {
-              activeVtCountRef.current = Math.max(0, activeVtCountRef.current - 1);
-              if (activeVtCountRef.current === 0) {
-                root.classList.remove('is-view-transitioning');
-              }
-            });
-        } else {
-          activeVtCountRef.current = Math.max(0, activeVtCountRef.current - 1);
-          if (activeVtCountRef.current === 0) {
-            root.classList.remove('is-view-transitioning');
-          }
-        }
-        return;
-      } catch {
-        activeVtCountRef.current = Math.max(0, activeVtCountRef.current - 1);
-        if (activeVtCountRef.current === 0) {
-          root.classList.remove('is-view-transitioning');
-        }
-      }
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash;
     }
-    apply();
+    routeRef.current = next;
+    setRoute((prev) => (isSameRoute(prev, next) ? prev : next));
+
+    // Reset scroll to top cleanly when switching between top-level sections
+    if (prevName !== next.name && typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    }
   }, []);
 
   return { route, navigate };
