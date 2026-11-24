@@ -66,6 +66,7 @@
 
 .fc-card {
   position: relative;
+  display: grid;
   width: 100%;
   min-height: 290px;
   border: none;
@@ -82,8 +83,7 @@
 }
 
 .fc-face {
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   padding: 26px 28px;

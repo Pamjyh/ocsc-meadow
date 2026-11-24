@@ -100,6 +100,10 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
         return;
       }
       if (e.code === 'Space') {
+        // Do not hijack Space when user is focused on another interactive control (F70)
+        if (target?.closest('button, a, select') && !target.closest('.fc-card')) {
+          return;
+        }
         e.preventDefault();
         setFlipped((prev) => !prev);
       } else if (flipped && ['1', '2', '3', '4'].includes(e.key)) {
@@ -111,10 +115,11 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [subMode, activeCard, flipped, handleRateCard]);
 
-  // Reset flip when subject filter changes
+  // Reset flip and practiceAll mode when subject filter changes (F69)
   useEffect(() => {
     setFlipped(false);
     setPracticeIndex(0);
+    setPracticeAll(false);
   }, [subjectFilter]);
 
   const handleRateMistake = (id: string, rating: SrsRating) => {
