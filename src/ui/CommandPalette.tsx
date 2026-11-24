@@ -40,22 +40,22 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
     return { sections: grouped, flatOrdered: ordered };
   }, [items, query]);
 
-  // Reset search, focus input immediately on open, and restore focus on close (F82)
+  // Reset search, focus input immediately on open, and restore focus on close or unmount (F82, F100)
   useEffect(() => {
-    if (!open) {
-      if (prevFocusRef.current && document.contains(prevFocusRef.current)) {
-        prevFocusRef.current.focus();
-      }
-      prevFocusRef.current = null;
-      return;
-    }
+    if (!open) return;
     prevFocusRef.current = document.activeElement as HTMLElement | null;
     setQuery('');
     setActiveIndex(0);
     const raf = window.requestAnimationFrame(() => {
       inputRef.current?.focus();
     });
-    return () => window.cancelAnimationFrame(raf);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      if (prevFocusRef.current && document.contains(prevFocusRef.current)) {
+        prevFocusRef.current.focus();
+      }
+      prevFocusRef.current = null;
+    };
   }, [open]);
 
   // Keep activeIndex in bounds when filter results shrink

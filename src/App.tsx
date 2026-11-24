@@ -39,6 +39,7 @@ import {
 import { useHashRoute } from './services/router';
 import { showToast } from './services/toast';
 import { isUiSfxEnabled, playUiSound, setUiSfxEnabled } from './services/uiSound';
+import { ChunkErrorBoundary } from './ui/ChunkErrorBoundary';
 import type { CommandItem } from './ui/commandPaletteItems';
 import { launchConfetti } from './ui/confetti';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
@@ -519,18 +520,20 @@ export function App() {
       />
 
       {zenMode ? (
-        <Suspense fallback={null}>
-          <ZenFocusOverlay
-            sceneId={sceneId}
-            audio={audio}
-            disableEsc={cmdOpen}
-            onSelectScene={setSceneId}
-            onTogglePlay={handleTogglePlay}
-            onPrevTrack={handlePrevTrack}
-            onNextTrack={handleNextTrack}
-            onExit={handleExitZen}
-          />
-        </Suspense>
+        <ChunkErrorBoundary>
+          <Suspense fallback={null}>
+            <ZenFocusOverlay
+              sceneId={sceneId}
+              audio={audio}
+              disableEsc={cmdOpen}
+              onSelectScene={setSceneId}
+              onTogglePlay={handleTogglePlay}
+              onPrevTrack={handlePrevTrack}
+              onNextTrack={handleNextTrack}
+              onExit={handleExitZen}
+            />
+          </Suspense>
+        </ChunkErrorBoundary>
       ) : (
         <>
           <TopNav
@@ -568,48 +571,50 @@ export function App() {
                 />
               )}
 
-              <Suspense
-                fallback={
-                  <div
-                    className="glass-card"
-                    style={{ padding: '28px 24px', textAlign: 'center', fontWeight: 600 }}
-                  >
-                    กำลังโหลดหน้า...
-                  </div>
-                }
-              >
-                {route.name === 'study' && (
-                  <StudyView
-                    bootstrap={bootstrap}
-                    progress={progress}
-                    activeDocId={route.docId}
-                    onNavigate={navigate}
-                    onUpdateProgress={updateProgress}
-                  />
-                )}
+              <ChunkErrorBoundary>
+                <Suspense
+                  fallback={
+                    <div
+                      className="glass-card"
+                      style={{ padding: '28px 24px', textAlign: 'center', fontWeight: 600 }}
+                    >
+                      กำลังโหลดหน้า...
+                    </div>
+                  }
+                >
+                  {route.name === 'study' && (
+                    <StudyView
+                      bootstrap={bootstrap}
+                      progress={progress}
+                      activeDocId={route.docId}
+                      onNavigate={navigate}
+                      onUpdateProgress={updateProgress}
+                    />
+                  )}
 
-                {route.name === 'exams' && (
-                  <ExamsHubView
-                    bootstrap={bootstrap}
-                    progress={progress}
-                    activeTab={route.tab}
-                    onNavigate={navigate}
-                    onStartExam={handleStartExam}
-                    onUpdateProgress={updateProgress}
-                  />
-                )}
+                  {route.name === 'exams' && (
+                    <ExamsHubView
+                      bootstrap={bootstrap}
+                      progress={progress}
+                      activeTab={route.tab}
+                      onNavigate={navigate}
+                      onStartExam={handleStartExam}
+                      onUpdateProgress={updateProgress}
+                    />
+                  )}
 
-                {route.name === 'exam-runner' && (
-                  <ExamRunnerView
-                    key={route.examId}
-                    examId={route.examId}
-                    initialMode={selectedExamMode}
-                    progress={progress}
-                    onNavigate={navigate}
-                    onUpdateProgress={updateProgress}
-                  />
-                )}
-              </Suspense>
+                  {route.name === 'exam-runner' && (
+                    <ExamRunnerView
+                      key={route.examId}
+                      examId={route.examId}
+                      initialMode={selectedExamMode}
+                      progress={progress}
+                      onNavigate={navigate}
+                      onUpdateProgress={updateProgress}
+                    />
+                  )}
+                </Suspense>
+              </ChunkErrorBoundary>
             </div>
           </main>
 
@@ -630,13 +635,15 @@ export function App() {
       <ToastHost />
 
       {cmdOpen && (
-        <Suspense fallback={null}>
-          <CommandPalette
-            open={cmdOpen}
-            items={commandItems}
-            onClose={() => setCmdOpen(false)}
-          />
-        </Suspense>
+        <ChunkErrorBoundary silent>
+          <Suspense fallback={null}>
+            <CommandPalette
+              open={cmdOpen}
+              items={commandItems}
+              onClose={() => setCmdOpen(false)}
+            />
+          </Suspense>
+        </ChunkErrorBoundary>
       )}
     </div>
   );
