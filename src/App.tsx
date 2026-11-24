@@ -232,7 +232,6 @@ export function App() {
           title: `${track.emoji} ${track.title}`,
           artist: 'OCSC Meadow',
           album: 'เสียงอ่านหนังสือ & Lo-fi',
-          artwork: [{ src: './app-icon.jpg', sizes: '512x512', type: 'image/jpeg' }],
         });
       }
       navigator.mediaSession.playbackState = audio.isPlaying ? 'playing' : 'paused';
