@@ -3,6 +3,7 @@ import {
   CORE_WIDGET_TYPES,
   GRID_COLS,
   GRID_MAX_H,
+  WIDGET_CATALOG,
   WIDGET_CATALOG_MAP,
   isWidgetType,
   type WidgetGridRect,
@@ -115,27 +116,17 @@ export function compactVerticalLayout(
 }
 
 export function createDefaultWidgetLayout(): WidgetLayoutState {
-  const defaultOrder: WidgetType[] = [
-    'core_welcome',
-    'core_countdown',
-    'core_pass_rollup',
-    'core_subjects',
-    'ytm_player',
-    'photo_collection',
-    'sticky_note',
-  ];
-
-  const items: WidgetItem[] = defaultOrder.map((type) => {
-    const meta = WIDGET_CATALOG_MAP[type];
-    return {
-      id: meta.multiInstance ? `${type}_default_1` : type,
-      type,
-      visible: meta.defaultVisible,
+  // Derive defaults directly from WIDGET_CATALOG so defaultVisible widgets never drift (F74)
+  const items: WidgetItem[] = WIDGET_CATALOG.filter((meta) => meta.defaultVisible).map(
+    (meta) => ({
+      id: meta.multiInstance ? `${meta.type}_default_1` : meta.type,
+      type: meta.type,
+      visible: true,
       size: meta.defaultSize,
       grid: { ...meta.defaultGrid },
       config: cloneConfig(meta.defaultConfig),
-    };
-  });
+    }),
+  );
 
   return {
     version: 2,

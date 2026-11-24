@@ -1,27 +1,46 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  STREAK_STORAGE_KEY,
   buildHeatmapCells,
   computeStreakSummary,
   loadStudyActivity,
   recordStudyActivity,
   type StudyActivityMap,
 } from '../streakStore';
+import { getLocalDateKey } from '../widgetUtils';
 import './StudyStreakCard.css';
 
 export function StudyStreakCard() {
   const [activity, setActivity] = useState<StudyActivityMap>(loadStudyActivity);
+  const [todayKey, setTodayKey] = useState<string>(() => getLocalDateKey());
 
+  // Keep heatmap & today check-in fresh across midnight and other browser tabs (F75)
   useEffect(() => {
-    const refresh = () => setActivity(loadStudyActivity());
+    const refresh = () => {
+      setActivity(loadStudyActivity());
+      setTodayKey(getLocalDateKey());
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STREAK_STORAGE_KEY) refresh();
+    };
     window.addEventListener('ocsc-streak-updated', refresh);
-    return () => window.removeEventListener('ocsc-streak-updated', refresh);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('ocsc-streak-updated', refresh);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
-  const summary = useMemo(() => computeStreakSummary(activity), [activity]);
-  const cells = useMemo(() => buildHeatmapCells(activity, 84), [activity]);
+  const summary = useMemo(() => computeStreakSummary(activity), [activity, todayKey]);
+  const cells = useMemo(() => buildHeatmapCells(activity, 84), [activity, todayKey]);
 
   const handleCheckIn = () => {
-    setActivity(recordStudyActivity(1));
+    recordStudyActivity(1);
   };
 
   return (

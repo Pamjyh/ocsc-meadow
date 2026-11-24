@@ -11,6 +11,7 @@
     max(22px, env(safe-area-inset-bottom, 0px))
     max(20px, env(safe-area-inset-left, 0px));
   pointer-events: none;
+  overscroll-behavior: none;
   animation: zen-fade-in 360ms ease both;
 }
 
@@ -242,6 +243,10 @@
 }
 
 @media (max-width: 600px) {
+  .zen-esc-hint {
+    display: none;
+  }
+
   .zen-top-bar {
     flex-wrap: wrap;
     justify-content: space-between;

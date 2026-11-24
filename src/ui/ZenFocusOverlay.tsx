@@ -89,7 +89,7 @@ export function ZenFocusOverlay({
           onClick={onExit}
           aria-label="ออกจากโหมด Zen"
         >
-          ออกจาก Zen (Esc)
+          ออกจาก Zen<span className="zen-esc-hint"> (Esc)</span>
         </button>
       </div>
 
