@@ -774,6 +774,13 @@
   margin-top: 0;
 }
 
+@media (min-width: 961px) {
+  .study-blurt-panel--compact {
+    position: sticky;
+    top: 84px;
+  }
+}
+
 @media (max-width: 960px) {
   .study-compare-grid {
     grid-template-columns: 1fr;

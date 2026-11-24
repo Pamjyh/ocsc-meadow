@@ -74,6 +74,9 @@ export function StudyView({
   const [selectedQuote, setSelectedQuote] = useState('');
   const [blurtMode, setBlurtMode] = useState<'read' | 'blurt' | 'compare'>('read');
   const [blurtMap, setBlurtMap] = useState<StudyBlurtMap>(loadAllBlurts);
+  const [blurtDraft, setBlurtDraft] = useState('');
+  const blurtMapRef = useRef(blurtMap);
+  blurtMapRef.current = blurtMap;
   const proseRef = useRef<HTMLDivElement | null>(null);
 
   const selectedItem = useMemo(() => {
@@ -234,12 +237,25 @@ export function StudyView({
     [docContent],
   );
 
-  // Reset blurt mode when switching chapters
+  // Reset blurt mode & load saved draft when switching chapters (F91)
   useEffect(() => {
     setBlurtMode('read');
+    setBlurtDraft(selectedItem ? (blurtMapRef.current[selectedItem.id]?.text ?? '') : '');
   }, [selectedItem?.id]);
 
-  // Track exact document scroll progress (0%..100%) across any chapter length (F83)
+  // Debounce localStorage persistence so typing/spaces/newlines never lag or get stripped (F91)
+  useEffect(() => {
+    const docId = selectedItem?.id;
+    if (!docId) return;
+    const savedText = blurtMapRef.current[docId]?.text ?? '';
+    if (blurtDraft === savedText) return;
+    const id = window.setTimeout(() => {
+      setBlurtMap((prev) => saveBlurtNote(prev, docId, blurtDraft));
+    }, 250);
+    return () => window.clearTimeout(id);
+  }, [blurtDraft, selectedItem?.id]);
+
+  // Track exact document scroll progress (0%..100%) across any chapter length & blurtMode (F83, F92)
   useEffect(() => {
     setSelectedQuote('');
     let rafId = 0;
@@ -266,7 +282,7 @@ export function StudyView({
       window.removeEventListener('resize', onScrollOrResize);
       if (rafId !== 0) window.cancelAnimationFrame(rafId);
     };
-  }, [selectedItem?.id, sanitizedHtml]);
+  }, [selectedItem?.id, sanitizedHtml, blurtMode]);
 
   // Detect text selection inside .study-prose for safe Quote Clipping (no DOM mutation)
   useEffect(() => {
@@ -297,11 +313,11 @@ export function StudyView({
   }, [selectedItem?.id]);
 
   const docHighlights = selectedItem ? (highlightsMap[selectedItem.id] ?? []) : [];
-  const docBlurtText = selectedItem ? (blurtMap[selectedItem.id]?.text ?? '') : '';
 
-  const handleChangeBlurt = (nextText: string) => {
+  const handleClearBlurt = () => {
     if (!selectedItem) return;
-    setBlurtMap((prev) => saveBlurtNote(prev, selectedItem.id, nextText));
+    setBlurtDraft('');
+    setBlurtMap((prev) => saveBlurtNote(prev, selectedItem.id, ''));
   };
 
   const handleToggleBlurtMode = () => {
@@ -312,6 +328,7 @@ export function StudyView({
 
   const handleFinishBlurtReview = () => {
     if (!selectedItem) return;
+    setBlurtMap((prev) => saveBlurtNote(prev, selectedItem.id, blurtDraft));
     recordStudyActivity(1);
     playUiSound('checkin');
     showToast({
@@ -613,15 +630,16 @@ export function StudyView({
                         ซ่อนเนื้อหาและไฮไลต์ไว้ชั่วคราว ลองพิมพ์หลักการ สูตร หรือมาตราที่จำได้ด้วยภาษาตัวเอง
                       </p>
                     </div>
-                    <span className="study-blurt-count">{docBlurtText.length} / 4,000 ตัวอักษร</span>
+                    <span className="study-blurt-count">{blurtDraft.length} / 4,000 ตัวอักษร</span>
                   </div>
 
                   <textarea
                     className="study-blurt-textarea"
                     rows={10}
+                    maxLength={4000}
                     placeholder="ลองเขียนทุกอย่างที่จำได้จากบทนี้ เช่น หลักการสำคัญ สูตร ข้อยกเว้น หรือคำศัพท์..."
-                    value={docBlurtText}
-                    onChange={(e) => handleChangeBlurt(e.target.value)}
+                    value={blurtDraft}
+                    onChange={(e) => setBlurtDraft(e.target.value)}
                   />
 
                   <div className="study-blurt-actions">
@@ -638,8 +656,8 @@ export function StudyView({
                     <button
                       type="button"
                       className="study-nav-btn"
-                      disabled={docBlurtText.length === 0}
-                      onClick={() => handleChangeBlurt('')}
+                      disabled={blurtDraft.length === 0}
+                      onClick={handleClearBlurt}
                     >
                       ล้างข้อความ
                     </button>
@@ -661,15 +679,16 @@ export function StudyView({
                     <textarea
                       className="study-blurt-textarea study-blurt-textarea--compare"
                       rows={12}
+                      maxLength={4000}
                       placeholder="เติมจุดที่เพิ่งนึกออกหรือตกหล่นลงที่นี่ได้เลย..."
-                      value={docBlurtText}
-                      onChange={(e) => handleChangeBlurt(e.target.value)}
+                      value={blurtDraft}
+                      onChange={(e) => setBlurtDraft(e.target.value)}
                     />
                     <div className="study-blurt-actions">
                       <button
                         type="button"
                         className="study-nav-btn study-nav-btn--primary"
-                        disabled={docBlurtText.trim().length === 0}
+                        disabled={blurtDraft.trim().length === 0}
                         onClick={handleFinishBlurtReview}
                       >
                         ✓ จบการทวน (+1 Streak)
