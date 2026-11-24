@@ -104,6 +104,11 @@ export function ExamScratchpad({
   }, []);
 
   useEffect(() => {
+    activeStrokeRef.current = null;
+    activePointerIdRef.current = null;
+  }, [questionOrder]);
+
+  useEffect(() => {
     if (padTab !== 'draw') return;
     redraw(strokes);
     const onResize = () => redraw(strokesRef.current, activeStrokeRef.current);
@@ -123,6 +128,7 @@ export function ExamScratchpad({
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (activePointerIdRef.current !== null) return;
     const pt = getNormalizedPoint(e);
     if (!pt) return;
@@ -244,6 +250,7 @@ export function ExamScratchpad({
           <button
             type="button"
             className="scratchpad-tool-btn"
+            disabled={padTab === 'draw' ? strokes.length === 0 : noteText.length === 0}
             onClick={handleClear}
           >
             ล้าง

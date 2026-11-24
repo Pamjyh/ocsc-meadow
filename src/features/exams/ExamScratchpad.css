@@ -203,13 +203,13 @@
 }
 
 .theme-night .scratchpad-canvas-wrap {
-  background-color: rgba(12, 24, 44, 0.82);
-  background-image: radial-gradient(rgba(186, 218, 255, 0.22) 1px, transparent 1px);
-  border-color: rgba(186, 218, 255, 0.22);
+  background-color: rgba(216, 228, 242, 0.88);
+  background-image: radial-gradient(rgba(22, 46, 76, 0.20) 1px, transparent 1px);
+  border-color: rgba(186, 218, 255, 0.34);
 }
 
 .theme-night .scratchpad-placeholder {
-  color: rgba(196, 220, 246, 0.52);
+  color: rgba(22, 48, 74, 0.58);
 }
 
 .theme-night .scratchpad-textarea {
