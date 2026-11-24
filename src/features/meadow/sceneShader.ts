@@ -91,12 +91,12 @@ void main() {
   vec2 sampleUv = uv;
 
   if (uMode < 1.5) {
-    // Scene 1: Blue wildflower meadow (gentle coherent wind wave across flower stems)
+    // Scene 1: Blue wildflower meadow (keep distant hills crisp; gentle rolling wind on foreground flowers)
     horizonY = 0.41;
-    float flowerMask = smoothstep(0.45, 0.80, uv.y);
-    float gust = sin(uv.x * 4.5 - uTime * 1.15) * 0.65 + sin(uv.x * 8.5 - uTime * 1.65) * 0.35;
-    float swayX = gust * 0.0024 * flowerMask;
-    float swayY = cos(uv.x * 4.5 - uTime * 1.15) * 0.0007 * flowerMask;
+    float flowerMask = smoothstep(0.50, 0.84, uv.y);
+    float gust = sin(uv.x * 3.8 - uTime * 1.10) * 0.65 + sin(uv.x * 7.2 - uTime * 1.55) * 0.35;
+    float swayX = gust * 0.0019 * flowerMask;
+    float swayY = cos(uv.x * 3.8 - uTime * 1.10) * 0.0005 * flowerMask;
     sampleUv = clamp(uv + vec2(swayX, swayY), 0.001, 0.999);
   } else if (uMode < 2.5) {
     // Scene 2: Sea of clouds above river valley
@@ -120,12 +120,13 @@ void main() {
     float swayY = cos(uTime * 0.85 + uv.x * 2.1) * 0.0004 * branchMask;
     sampleUv = clamp(uv + vec2(swayX, swayY), 0.001, 0.999);
   } else {
-    // Scene 4: Hilltop meadow overlooking lake & cumulus clouds
+    // Scene 4: Hilltop meadow overlooking lake & cumulus clouds (keep valley & lake crisp; sway foreground hill grass)
     horizonY = 0.60;
-    float grassMask = smoothstep(0.66, 0.86, uv.y);
-    float gust = sin(uv.x * 6.0 - uTime * 1.35) * 0.7 + sin(uv.x * 11.0 - uTime * 1.9) * 0.3;
-    float grassSway = gust * 0.0028 * grassMask;
-    float grassY = cos(uv.x * 6.0 - uTime * 1.1) * 0.0008 * grassMask;
+    float lakeHole = 1.0 - smoothstep(0.24, 0.30, uv.x) * (1.0 - smoothstep(0.58, 0.65, uv.x)) * smoothstep(0.68, 0.73, uv.y) * (1.0 - smoothstep(0.79, 0.84, uv.y));
+    float grassMask = smoothstep(0.70, 0.88, uv.y) * lakeHole;
+    float gust = sin(uv.x * 4.2 - uTime * 1.35) * 0.68 + sin(uv.x * 8.4 - uTime * 1.85) * 0.32;
+    float grassSway = gust * 0.0024 * grassMask;
+    float grassY = cos(uv.x * 4.2 - uTime * 1.15) * 0.0006 * grassMask;
     sampleUv = clamp(uv + vec2(grassSway, grassY), 0.001, 0.999);
   }
 
@@ -225,6 +226,30 @@ void main() {
   }
 
   vec3 groundCol = baseCol * groundTint;
+
+  // Scene 4 (Mountain Lake): organic 24h water shimmer across the valley lake
+  if (uMode > 3.5) {
+    float inLakeBox = smoothstep(0.25, 0.31, uv.x) * (1.0 - smoothstep(0.57, 0.64, uv.x))
+                    * smoothstep(0.70, 0.73, uv.y) * (1.0 - smoothstep(0.78, 0.82, uv.y));
+    float isWater = smoothstep(0.56, 0.78, luma) * smoothstep(-0.02, 0.08, baseCol.b - baseCol.g * 0.92);
+    float lakeMask = inLakeBox * isWater;
+    if (lakeMask > 0.01) {
+      float rip1 = vnoise(vec2(uv.x * 54.0 - uTime * 0.9, uv.y * 92.0 + uTime * 0.3));
+      float rip2 = vnoise(vec2(uv.x * 86.0 + uTime * 0.6, uv.y * 128.0 - uTime * 0.4));
+      float sparkle = smoothstep(0.62, 0.92, rip1 * 0.55 + rip2 * 0.45) * lakeMask;
+      vec3 sheenTint = sampleCycle(
+        h,
+        vec3(0.76, 0.88, 1.00),
+        vec3(0.98, 0.82, 0.74),
+        vec3(1.00, 0.95, 0.84),
+        vec3(0.98, 1.00, 1.00),
+        vec3(1.00, 0.78, 0.54),
+        vec3(0.80, 0.86, 1.00)
+      );
+      groundCol = mix(groundCol, sheenTint, sparkle * 0.48);
+    }
+  }
+
   vec3 finalRgb = mix(groundCol, gradedSky, skyMask);
 
   // Drifting painted cumulus clouds (uCloudTex) smoothly tinted by 24h cycle
@@ -251,19 +276,23 @@ void main() {
       finalRgb = mix(finalRgb, mistCol, mist * 0.24 * cloudAlphaScale);
     }
   } else {
-    // Scenes 1, 3, 4: subtle real painted clouds drifting inside skyMask only
+    // Scenes 1, 3, 4: 2-layer painted cumulus clouds drifting smoothly inside skyMask
     float skyCloudRange = max(horizonY + 0.04, 0.36);
     if (uv.y < skyCloudRange && skyMask > 0.02) {
       float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
-      float drift = fract(uv.x - uTime * 0.0085);
-      vec4 c = texture2D(uCloudTex, vec2(drift, cy));
-      float strength = uMode > 2.5 && uMode < 3.5 ? 0.34 : 0.26;
-      finalRgb = mix(finalRgb, c.rgb * cloudTint, c.a * strength * skyMask * cloudAlphaScale);
+      float d1 = fract(uv.x - uTime * 0.0095);
+      float d2 = fract(uv.x * 0.90 + 0.45 - uTime * 0.0052);
+      vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
+      vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.06 + 0.03, 0.002, 0.998)));
+      float s1 = uMode > 2.5 && uMode < 3.5 ? 0.36 : 0.42;
+      float s2 = uMode > 2.5 && uMode < 3.5 ? 0.20 : 0.24;
+      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * s2 * skyMask * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * s1 * skyMask * cloudAlphaScale);
     }
   }
 
-  // Scene 3 (Pink Garden): delicate floating pink blossom petals drifting in the breeze
-  if (uMode > 2.5 && uMode < 3.5) {
+  // Floating drifting petals (Scene 1: pale blue wildflowers, Scene 3: pink blossoms)
+  if (uMode < 1.5 || (uMode > 2.5 && uMode < 3.5)) {
     vec2 pGrid = uv * vec2(9.0, 5.5) + vec2(-uTime * 0.18, -uTime * 0.10);
     vec2 pCell = floor(pGrid);
     float r = hash21(pCell + vec2(4.3, 8.7));
@@ -273,14 +302,30 @@ void main() {
         0.5 + 0.26 * cos(uTime * (0.7 + r * 0.4) + r * 13.0)
       );
       vec2 d = fract(pGrid) - center;
-      // Rotate petal gently as it drifts
       float ang = uTime * (1.2 + r) + r * 6.28;
       float ca = cos(ang);
       float sa = sin(ang);
       vec2 rd = vec2(d.x * ca - d.y * sa, (d.x * sa + d.y * ca) * 1.9);
       float petal = smoothstep(0.11, 0.025, length(rd));
-      vec3 petalCol = vec3(1.0, 0.78, 0.86) * mix(groundTint, vec3(1.0), 0.35);
-      finalRgb = mix(finalRgb, petalCol, petal * 0.65);
+      vec3 basePetal = uMode < 1.5 ? vec3(0.84, 0.93, 1.0) : vec3(1.0, 0.78, 0.86);
+      vec3 petalCol = basePetal * mix(groundTint, vec3(1.0), 0.35);
+      finalRgb = mix(finalRgb, petalCol, petal * 0.62);
+    }
+  }
+
+  // Scene 4 (Hilltop Meadow): gentle sunlit pollen / breeze motes drifting during day & sunset
+  if (uMode > 3.5 && nightStrength < 0.75) {
+    vec2 mGrid = uv * vec2(11.0, 6.5) + vec2(-uTime * 0.15, -uTime * 0.04);
+    vec2 mCell = floor(mGrid);
+    float r = hash21(mCell + vec2(9.2, 5.4));
+    if (r > 0.80) {
+      vec2 center = vec2(
+        0.5 + 0.30 * sin(uTime * (0.8 + r * 0.4) + r * 17.0),
+        0.5 + 0.26 * cos(uTime * (0.6 + r * 0.4) + r * 23.0)
+      );
+      float d = length(fract(mGrid) - center);
+      float mote = exp(-d * 16.0) * smoothstep(0.45, 0.75, uv.y) * (1.0 - nightStrength);
+      finalRgb += vec3(1.0, 0.97, 0.84) * mote * 0.42;
     }
   }
 
