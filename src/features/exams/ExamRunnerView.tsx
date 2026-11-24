@@ -14,6 +14,7 @@ import {
 import { gradeExam } from '../../domain/scoring';
 import { loadExamDetail } from '../../services/dataRepository';
 import type { AppRoute } from '../../services/router';
+import { recordExamMistakes } from './reviewStore';
 import './ExamsView.css';
 
 interface ExamRunnerViewProps {
@@ -141,6 +142,15 @@ export function ExamRunnerView({
         finishedAt,
         answers: finalAnswers,
       };
+
+      // Snapshot wrong questions into Mistake Bank immediately while questions are in memory
+      recordExamMistakes(
+        examId,
+        detail.exam.title,
+        detail.exam.subjectCode,
+        detail.questions,
+        finalAnswers,
+      );
 
       setSubmittedAttempt(attempt);
       onUpdateProgress((prev) => {

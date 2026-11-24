@@ -11,12 +11,13 @@ import {
   type GlassIconName,
   type GlassIconTone,
 } from '../../ui/LiquidGlassIcon';
+import { ReviewFlashcardsPanel } from './ReviewFlashcardsPanel';
 import './ExamsView.css';
 
 interface ExamsHubViewProps {
   bootstrap: BootstrapPayload;
   progress: UserProgress;
-  activeTab: 'interactive' | 'pdf';
+  activeTab: 'interactive' | 'pdf' | 'review';
   onNavigate: (route: AppRoute) => void;
   onStartExam: (examId: string, mode: ExamMode) => void;
   onUpdateProgress: (updater: (prev: UserProgress) => UserProgress) => void;
@@ -120,7 +121,17 @@ export function ExamsHubView({
             onClick={() => onNavigate({ name: 'exams', tab: 'pdf' })}
           >
             <LiquidGlassIcon name="pdf" tone="coral" size="sm" shape="circle" />
-            <span>ชุด PDF เฉลยท้ายบท ({pdfExams.length})</span>
+            <span>ชุด PDF ({pdfExams.length})</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'review'}
+            className={`exams-tab-btn${activeTab === 'review' ? ' exams-tab-btn--active' : ''}`}
+            onClick={() => onNavigate({ name: 'exams', tab: 'review' })}
+          >
+            <LiquidGlassIcon name="award" tone="meadow" size="sm" shape="circle" />
+            <span>ทบทวน &amp; แฟลชการ์ด</span>
           </button>
         </div>
       </header>
@@ -145,7 +156,9 @@ export function ExamsHubView({
         ))}
       </div>
 
-      {activeTab === 'interactive' ? (
+      {activeTab === 'review' ? (
+        <ReviewFlashcardsPanel subjectFilter={subjectFilter} />
+      ) : activeTab === 'interactive' ? (
         <section className="exams-grid">
           {filteredExams.map((exam) => {
             const icon = getSubjectIcon(exam.subjectCode);

@@ -1,0 +1,329 @@
+/* Mistake Bank & FSRS Flashcards Panel */
+.review-panel-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-subbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.review-mode-pills {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+}
+
+.review-mode-btn {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: #20374c;
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.review-mode-btn--active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.78));
+  border-color: rgba(255, 255, 255, 0.96);
+  color: #0e385c;
+  box-shadow: 0 4px 12px rgba(22, 52, 82, 0.12);
+}
+
+.review-stats-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* 3D Flip Flashcard Stage */
+.fc-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.fc-scene {
+  width: 100%;
+  perspective: 1200px;
+}
+
+.fc-card {
+  position: relative;
+  width: 100%;
+  min-height: 290px;
+  border: none;
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fc-card--flipped {
+  transform: rotateY(180deg);
+}
+
+.fc-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  padding: 26px 28px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(244, 250, 255, 0.68) 100%
+  );
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  box-shadow:
+    0 18px 44px rgba(18, 44, 68, 0.16),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.96);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.fc-face--back {
+  transform: rotateY(180deg);
+  background: linear-gradient(
+    145deg,
+    rgba(242, 252, 246, 0.88) 0%,
+    rgba(232, 246, 255, 0.74) 100%
+  );
+}
+
+.fc-face-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fc-face-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.08rem;
+  line-height: 1.65;
+  color: #102436;
+}
+
+.fc-face-body--front {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.18rem;
+}
+
+.fc-tip {
+  font-size: 0.84rem;
+  color: #2b5476;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(59, 130, 182, 0.1);
+}
+
+.fc-hint {
+  font-size: 0.78rem;
+  color: #466078;
+  text-align: center;
+}
+
+.fc-rating-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.fc-rate-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.76);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #14324c;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.fc-rate-btn:hover {
+  transform: translateY(-2px);
+}
+
+.fc-rate-btn--1 {
+  background: rgba(254, 232, 232, 0.9);
+  border-color: rgba(198, 67, 67, 0.3);
+  color: #9e2626;
+}
+
+.fc-rate-btn--2 {
+  background: rgba(255, 243, 224, 0.92);
+  border-color: rgba(202, 128, 32, 0.32);
+  color: #8c5210;
+}
+
+.fc-rate-btn--3 {
+  background: rgba(226, 248, 232, 0.92);
+  border-color: rgba(46, 125, 82, 0.3);
+  color: #195e36;
+}
+
+.fc-rate-btn--4 {
+  background: rgba(224, 242, 255, 0.92);
+  border-color: rgba(48, 132, 200, 0.34);
+  color: #134d80;
+}
+
+.fc-rate-int {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* Mistake Bank Cards */
+.mistake-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mistake-card {
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mistake-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.mistake-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mistake-empty {
+  padding: 36px 24px;
+  text-align: center;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.68);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Dark Glass (.theme-night) overrides */
+.theme-night .review-mode-pills {
+  background: rgba(14, 28, 52, 0.66);
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .review-mode-btn {
+  color: #c2d6eb;
+}
+
+.theme-night .review-mode-btn--active {
+  background: linear-gradient(180deg, rgba(52, 92, 146, 0.88), rgba(34, 66, 110, 0.78));
+  border-color: rgba(196, 224, 255, 0.42);
+  color: #ffffff;
+}
+
+.theme-night .fc-face,
+.theme-night .mistake-card,
+.theme-night .mistake-empty {
+  background: linear-gradient(145deg, rgba(16, 30, 54, 0.78), rgba(10, 20, 38, 0.68));
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #f1f6fc;
+}
+
+.theme-night .fc-face--back {
+  background: linear-gradient(145deg, rgba(16, 42, 46, 0.82), rgba(12, 26, 46, 0.74));
+}
+
+.theme-night .fc-face-body {
+  color: #f1f6fc;
+}
+
+.theme-night .fc-tip {
+  background: rgba(96, 168, 232, 0.18);
+  color: #bfe0ff;
+}
+
+.theme-night .fc-hint {
+  color: #b4cce4;
+}
+
+.theme-night .fc-rate-btn--1 {
+  background: rgba(112, 34, 38, 0.82);
+  color: #ffc2c2;
+}
+
+.theme-night .fc-rate-btn--2 {
+  background: rgba(110, 72, 22, 0.82);
+  color: #ffe0a8;
+}
+
+.theme-night .fc-rate-btn--3 {
+  background: rgba(24, 76, 52, 0.82);
+  color: #a6f0c4;
+}
+
+.theme-night .fc-rate-btn--4 {
+  background: rgba(28, 68, 112, 0.84);
+  color: #bfe2ff;
+}
+
+@media (max-width: 600px) {
+  .fc-face {
+    padding: 20px 18px;
+  }
+
+  .fc-rating-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

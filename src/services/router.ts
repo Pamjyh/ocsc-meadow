@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 export type AppRoute =
   | { name: 'dashboard' }
   | { name: 'study'; docId: string | null }
-  | { name: 'exams'; tab: 'interactive' | 'pdf' }
+  | { name: 'exams'; tab: 'interactive' | 'pdf' | 'review' }
   | { name: 'exam-runner'; examId: string };
 
 export function parseHash(rawHash: string): AppRoute {
@@ -23,6 +23,7 @@ export function parseHash(rawHash: string): AppRoute {
   if (first === 'exams') {
     if (!second) return { name: 'exams', tab: 'interactive' };
     if (second === 'pdf') return { name: 'exams', tab: 'pdf' };
+    if (second === 'review') return { name: 'exams', tab: 'review' };
     return { name: 'exam-runner', examId: second };
   }
 
@@ -36,7 +37,11 @@ export function buildHash(route: AppRoute): string {
     case 'study':
       return route.docId ? `#/study/${encodeURIComponent(route.docId)}` : '#/study';
     case 'exams':
-      return route.tab === 'pdf' ? '#/exams/pdf' : '#/exams';
+      return route.tab === 'pdf'
+        ? '#/exams/pdf'
+        : route.tab === 'review'
+          ? '#/exams/review'
+          : '#/exams';
     case 'exam-runner':
       return `#/exams/${encodeURIComponent(route.examId)}`;
   }
