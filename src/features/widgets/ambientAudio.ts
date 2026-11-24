@@ -678,6 +678,11 @@ class AmbientAudioEngine {
     drumBus.gain.value = style === 'chill' ? 0.52 : 0.44;
     drumBus.connect(warmBus);
 
+    // Per-track reverb send so switching keys cuts previous chords cleanly (F66)
+    const trackReverb = ctx.createGain();
+    trackReverb.gain.value = 1;
+    trackReverb.connect(reverb);
+
     // 8-bar Jazz chord voicings + root bass + gentle pentatonic melody pool
     const chords: { bass: number; notes: number[] }[] =
       style === 'chill'
@@ -724,7 +729,7 @@ class AmbientAudioEngine {
           this.playRhodesNote(
             ctx,
             warmBus,
-            reverb,
+            trackReverb,
             freq,
             when + idx * 0.032,
             eighthSec * 7.6,
@@ -740,7 +745,7 @@ class AmbientAudioEngine {
         this.playRhodesNote(
           ctx,
           warmBus,
-          reverb,
+          trackReverb,
           chord.notes[chord.notes.length - 1]!,
           when,
           eighthSec * 1.9,
@@ -755,7 +760,7 @@ class AmbientAudioEngine {
         this.playRhodesNote(
           ctx,
           warmBus,
-          reverb,
+          trackReverb,
           note,
           when + 0.012,
           eighthSec * 2.4,
@@ -773,7 +778,7 @@ class AmbientAudioEngine {
         this.playBrushedSnare(
           ctx,
           drumBus,
-          reverb,
+          trackReverb,
           when + 0.014,
           style === 'chill' ? 0.13 : 0.095,
         );
@@ -786,6 +791,10 @@ class AmbientAudioEngine {
     const tickScheduler = (isInitial = false) => {
       if (stopped) return;
       if (!isInitial && ctx.state !== 'running') return;
+      // Prevent catch-up burst after background-tab throttling or sleep (F65)
+      if (nextStepTime < ctx.currentTime - 0.35) {
+        nextStepTime = ctx.currentTime + 0.03;
+      }
       const horizon = ctx.currentTime + 0.14;
       while (nextStepTime < horizon) {
         const swingOffset = stepIndex % 2 === 1 ? eighthSec * swingRatio : 0;
@@ -802,6 +811,7 @@ class AmbientAudioEngine {
     return () => {
       stopped = true;
       window.clearInterval(timerId);
+      trackReverb.disconnect();
       drumBus.disconnect();
       warmBus.disconnect();
     };
@@ -818,6 +828,10 @@ class AmbientAudioEngine {
     feltBus.frequency.value = 1350;
     feltBus.Q.value = 0.5;
     feltBus.connect(dest);
+
+    const trackReverb = ctx.createGain();
+    trackReverb.gain.value = 1;
+    trackReverb.connect(reverb);
 
     const arpeggios: number[][] = [
       [174.61, 261.63, 329.63, 392.0, 440.0, 523.25], // Fmaj9
@@ -838,6 +852,10 @@ class AmbientAudioEngine {
     const tick = (isInitial = false) => {
       if (stopped) return;
       if (!isInitial && ctx.state !== 'running') return;
+      // Prevent catch-up burst after background-tab throttling or sleep (F65)
+      if (nextTime < ctx.currentTime - 0.35) {
+        nextTime = ctx.currentTime + 0.03;
+      }
       const horizon = ctx.currentTime + 0.16;
       while (nextTime < horizon) {
         const bar = Math.floor(step / 8);
@@ -852,7 +870,7 @@ class AmbientAudioEngine {
         this.playRhodesNote(
           ctx,
           feltBus,
-          reverb,
+          trackReverb,
           freq,
           nextTime,
           isRoot ? stepSec * 7.5 : stepSec * 4.2,
@@ -871,6 +889,7 @@ class AmbientAudioEngine {
     return () => {
       stopped = true;
       window.clearInterval(timerId);
+      trackReverb.disconnect();
       feltBus.disconnect();
     };
   }
