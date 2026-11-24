@@ -67,7 +67,6 @@ export function StudyView({
   const [highlightsMap, setHighlightsMap] = useState<StudyHighlightsMap>(loadAllStudyHighlights);
   const [highlightsOpen, setHighlightsOpen] = useState(false);
   const [selectedQuote, setSelectedQuote] = useState('');
-  const readerRef = useRef<HTMLElement | null>(null);
   const proseRef = useRef<HTMLDivElement | null>(null);
 
   const selectedItem = useMemo(() => {
@@ -228,25 +227,26 @@ export function StudyView({
     [docContent],
   );
 
-  // Track reading scroll progress across the active chapter article
+  // Track exact document scroll progress (0%..100%) across any chapter length (F83)
   useEffect(() => {
-    setReadProgress(0);
     setSelectedQuote('');
     let rafId = 0;
     const measure = () => {
       rafId = 0;
-      const el = readerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const scrollable = Math.max(1, el.offsetHeight - window.innerHeight * 0.72);
-      const scrolled = Math.max(0, -rect.top);
-      setReadProgress(Math.min(1, scrolled / scrollable));
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 10) {
+        setReadProgress(0);
+        return;
+      }
+      setReadProgress(Math.max(0, Math.min(1, window.scrollY / maxScroll)));
     };
     const onScrollOrResize = () => {
       if (rafId === 0) {
         rafId = window.requestAnimationFrame(measure);
       }
     };
+    measure();
     window.addEventListener('scroll', onScrollOrResize, { passive: true });
     window.addEventListener('resize', onScrollOrResize, { passive: true });
     return () => {
@@ -460,7 +460,7 @@ export function StudyView({
           </div>
         </aside>
 
-        <article className="study-reader" ref={readerRef}>
+        <article className="study-reader">
           {selectedItem ? (
             <>
               <header className="study-reader-top">

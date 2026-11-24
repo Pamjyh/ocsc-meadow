@@ -634,7 +634,7 @@
 
 @media (max-width: 768px) {
   .study-clip-pill {
-    bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(138px + env(safe-area-inset-bottom, 0px));
     flex-wrap: wrap;
     justify-content: center;
     border-radius: 20px;
