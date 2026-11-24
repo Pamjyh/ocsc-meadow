@@ -342,6 +342,26 @@ export function StudyView({
 
   const clozePreview = clozeTarget ? buildClozeFront(clozeTarget.hl.text, clozePhrase) : null;
 
+  // Close StudyView modals cleanly layer-by-layer on Escape (F96)
+  useEffect(() => {
+    if (!clozeTarget && !allHighlightsOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (clozeTarget) setClozeTarget(null);
+      else if (allHighlightsOpen) setAllHighlightsOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [clozeTarget, allHighlightsOpen]);
+
+  const filteredAllHighlights = useMemo(
+    () =>
+      allHighlightsFlat.filter(
+        (row) => allHlColorFilter === 'all' || row.hl.color === allHlColorFilter,
+      ),
+    [allHighlightsFlat, allHlColorFilter],
+  );
+
   const handleCreateClozeCard = () => {
     if (!clozeTarget || !clozePreview) return;
     const res = addCustomClozeFlashcard({
@@ -350,7 +370,11 @@ export function StudyView({
       fullText: clozeTarget.hl.text,
       hiddenPhrase: clozePhrase,
     });
-    if (res.added) {
+    if (res.duplicate) {
+      showToast({ message: 'มีแฟลชการ์ดเติมคำใบนี้อยู่แล้ว', tone: 'info' });
+      setClozeTarget(null);
+      setClozePhrase('');
+    } else if (res.added) {
       playUiSound('checkin');
       showToast({
         message: 'สร้างแฟลชการ์ดเติมคำ (Cloze) แล้ว!',
@@ -894,7 +918,7 @@ export function StudyView({
               </button>
             </div>
 
-            <div className="exams-subject-pills">
+            <div className="study-modal-pills">
               {(
                 [
                   ['all', 'ทั้งหมด'],
@@ -906,8 +930,8 @@ export function StudyView({
                 <button
                   key={cKey}
                   type="button"
-                  className={`exams-filter-pill${
-                    allHlColorFilter === cKey ? ' exams-filter-pill--active' : ''
+                  className={`study-filter-btn${
+                    allHlColorFilter === cKey ? ' study-filter-btn--active' : ''
                   }`}
                   onClick={() => setAllHlColorFilter(cKey)}
                 >
@@ -917,9 +941,10 @@ export function StudyView({
             </div>
 
             <div className="study-modal-body">
-              {allHighlightsFlat
-                .filter((row) => allHlColorFilter === 'all' || row.hl.color === allHlColorFilter)
-                .map(({ hl, docTitle, subjectCode }) => (
+              {filteredAllHighlights.length === 0 ? (
+                <p className="study-modal-empty">ยังไม่มีไฮไลต์ในหมวดสีนี้</p>
+              ) : (
+                filteredAllHighlights.map(({ hl, docTitle, subjectCode }) => (
                   <div key={hl.id} className={`study-hl-card study-hl-card--${hl.color}`}>
                     <div className="study-hl-text">
                       <div style={{ fontSize: '0.74rem', opacity: 0.78, marginBottom: 2 }}>
@@ -951,7 +976,8 @@ export function StudyView({
                       </button>
                     </span>
                   </div>
-                ))}
+                ))
+              )}
             </div>
           </div>
         </div>

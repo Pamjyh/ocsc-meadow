@@ -881,6 +881,23 @@
   padding-right: 4px;
 }
 
+.study-modal-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.study-modal-pills .study-filter-btn {
+  padding: 5px 12px;
+}
+
+.study-modal-empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
 .cloze-source-box {
   padding: 12px 14px;
   border-radius: 14px;

@@ -15,6 +15,7 @@ import {
   loadMistakes,
   rateFlashcard,
   rateMistakeRecord,
+  removeFlashcardSrs,
   removeMistakeRecord,
   summarizeErrorCauses,
   tagMistakeRecord,
@@ -306,6 +307,7 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
                     onClick={() => {
                       playUiSound('tap');
                       setCustomCards(removeCustomFlashcard(activeCard.id));
+                      setSrsMap(removeFlashcardSrs(activeCard.id));
                       setFlipped(false);
                     }}
                   >

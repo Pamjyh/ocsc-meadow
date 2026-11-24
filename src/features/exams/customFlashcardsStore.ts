@@ -48,18 +48,23 @@ export function addCustomClozeFlashcard(params: {
   fullText: string;
   hiddenPhrase: string;
   tip?: string;
-}): { cards: StudyFlashcard[]; added: StudyFlashcard | null } {
+}): { cards: StudyFlashcard[]; added: StudyFlashcard | null; duplicate?: boolean } {
   const front = buildClozeFront(params.fullText, params.hiddenPhrase);
   if (!front) {
     return { cards: loadCustomFlashcards(), added: null };
   }
 
+  const frontMd = `เติมคำในช่องว่าง:\n${front}`;
   const existing = loadCustomFlashcards();
+  if (existing.some((c) => c.front === frontMd && c.subjectCode === params.subjectCode)) {
+    return { cards: existing, added: null, duplicate: true };
+  }
+
   const entry: StudyFlashcard = {
     id: `custom_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
     subjectCode: params.subjectCode,
     tag: params.tag.trim() || 'ไฮไลต์ส่วนตัว',
-    front: `เติมคำในช่องว่าง:\n${front}`,
+    front: frontMd,
     back: `**${params.hiddenPhrase.trim()}**\n\n${params.fullText.trim()}`,
     ...(params.tip?.trim() ? { tip: params.tip.trim() } : {}),
   };

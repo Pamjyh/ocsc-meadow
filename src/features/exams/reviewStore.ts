@@ -182,3 +182,11 @@ export function rateFlashcard(
   writeJson(FLASHCARD_SRS_STORAGE_KEY, updated);
   return updated;
 }
+
+export function removeFlashcardSrs(cardId: string): FlashcardSrsMap {
+  const map = loadFlashcardSrsMap();
+  if (!(cardId in map)) return map;
+  const { [cardId]: _removed, ...rest } = map;
+  writeJson(FLASHCARD_SRS_STORAGE_KEY, rest);
+  return rest;
+}
