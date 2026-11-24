@@ -12,7 +12,7 @@ import {
   type GlassIconName,
   type GlassIconTone,
 } from '../../ui/LiquidGlassIcon';
-import type { AmbientTrackId } from '../widgets/ambientAudio';
+import type { AmbientLayerKey, AmbientTrackId } from '../widgets/ambientAudio';
 import { AestheticClockCard } from '../widgets/cards/AestheticClockCard';
 import { AmbientPlayerCard } from '../widgets/cards/AmbientPlayerCard';
 import { DailyGoalsCard } from '../widgets/cards/DailyGoalsCard';
@@ -54,6 +54,7 @@ interface DashboardViewProps {
   onPrevTrack: () => void;
   onNextTrack: () => void;
   onChangeVolume: (volume: number) => void;
+  onChangeLayer: (layer: AmbientLayerKey, level: number) => void;
 }
 
 const SYNC_LABELS: Record<SyncStatus, string> = {
@@ -98,6 +99,7 @@ export function DashboardView({
   onPrevTrack,
   onNextTrack,
   onChangeVolume,
+  onChangeLayer,
 }: DashboardViewProps) {
   const { config, subjects, studyItems, pdfExams } = bootstrap;
 
@@ -386,6 +388,7 @@ export function DashboardView({
             onPrevTrack={onPrevTrack}
             onNextTrack={onNextTrack}
             onChangeVolume={onChangeVolume}
+            onChangeLayer={onChangeLayer}
           />
         );
 

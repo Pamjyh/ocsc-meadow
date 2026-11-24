@@ -1,4 +1,4 @@
-import type { AmbientTrackId } from './ambientAudio';
+import type { AmbientLayers, AmbientTrackId } from './ambientAudio';
 
 export type CoreWidgetType =
   | 'core_welcome'
@@ -47,6 +47,7 @@ export interface AmbientPlayerState {
   trackId: AmbientTrackId;
   isPlaying: boolean;
   volume: number;
+  layers: AmbientLayers;
 }
 
 export interface WidgetCatalogMeta {

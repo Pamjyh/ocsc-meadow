@@ -179,32 +179,116 @@
   color: #ffffff;
 }
 
+/* Multi-layer Ambient Sound Mixer */
+.ambient-mixer-box {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ambient-mixer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.ambient-mixer-title {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #14324c;
+}
+
+.ambient-mixer-hint {
+  font-size: 0.72rem;
+  color: #466078;
+}
+
+.ambient-mixer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 10px;
+}
+
+.ambient-layer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(20, 48, 74, 0.08);
+}
+
+.ambient-layer-row--on {
+  background: rgba(226, 242, 255, 0.86);
+  border-color: rgba(58, 142, 206, 0.45);
+}
+
+.ambient-layer-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #14324c;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ambient-layer-slider {
+  flex: 1;
+  min-width: 48px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
 @container (max-width: 440px) {
-  .ambient-track-grid {
+  .ambient-track-grid,
+  .ambient-mixer-grid {
     grid-template-columns: 1fr;
   }
 }
 
 /* Night Mode (.theme-night) for Ambient Player */
 .theme-night .ambient-now-box,
-.theme-night .ambient-track-chip {
+.theme-night .ambient-track-chip,
+.theme-night .ambient-mixer-box {
   background: rgba(18, 34, 60, 0.68);
   border-color: rgba(186, 218, 255, 0.22);
 }
 
-.theme-night .ambient-track-chip--active {
+.theme-night .ambient-layer-row {
+  background: rgba(14, 28, 52, 0.66);
+  border-color: rgba(186, 218, 255, 0.16);
+}
+
+.theme-night .ambient-track-chip--active,
+.theme-night .ambient-layer-row--on {
   background: rgba(42, 76, 122, 0.84);
   border-color: rgba(160, 210, 255, 0.5);
 }
 
 .theme-night .ambient-now-title,
-.theme-night .ambient-chip-title {
+.theme-night .ambient-chip-title,
+.theme-night .ambient-mixer-title,
+.theme-night .ambient-layer-toggle {
   color: #f1f6fc;
 }
 
 .theme-night .ambient-now-sub,
 .theme-night .ambient-chip-sub,
-.theme-night .ambient-vol-pct {
+.theme-night .ambient-vol-pct,
+.theme-night .ambient-mixer-hint {
   color: #c2d6eb;
 }
 

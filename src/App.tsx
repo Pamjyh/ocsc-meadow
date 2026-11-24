@@ -13,9 +13,14 @@ import {
 } from './features/meadow/sceneCatalog';
 import { PomodoroWidget } from './features/pomodoro/PomodoroWidget';
 import { StudyView } from './features/study/StudyView';
-import { ambientEngine, type AmbientTrackId } from './features/widgets/ambientAudio';
+import {
+  ambientEngine,
+  type AmbientLayerKey,
+  type AmbientTrackId,
+} from './features/widgets/ambientAudio';
 import { GlobalMusicDock } from './features/widgets/GlobalMusicDock';
 import {
+  getAmbientTrack,
   getNextTrackId,
   getPrevTrackId,
   loadAmbientState,
@@ -48,7 +53,7 @@ export function App() {
 
   useEffect(() => {
     saveAmbientState(audio);
-  }, [audio.trackId, audio.volume]);
+  }, [audio.trackId, audio.volume, audio.layers]);
 
   useEffect(() => {
     saveSelectedScene(sceneId);
@@ -143,7 +148,7 @@ export function App() {
   // F49: Synchronous Web Audio resume/play inside user click handlers for Safari/iOS
   const handleSelectTrack = useCallback((trackId: AmbientTrackId) => {
     const cur = audioRef.current;
-    const ok = ambientEngine.play(trackId, cur.volume);
+    const ok = ambientEngine.play(trackId, cur.volume, cur.layers);
     setAudio((prev) => ({ ...prev, trackId, isPlaying: ok }));
   }, []);
 
@@ -153,7 +158,7 @@ export function App() {
       ambientEngine.pause();
       setAudio((prev) => ({ ...prev, isPlaying: false }));
     } else {
-      const ok = ambientEngine.play(cur.trackId, cur.volume);
+      const ok = ambientEngine.play(cur.trackId, cur.volume, cur.layers);
       setAudio((prev) => ({ ...prev, isPlaying: ok }));
     }
   }, []);
@@ -162,7 +167,7 @@ export function App() {
     const cur = audioRef.current;
     const prevId = getPrevTrackId(cur.trackId);
     if (cur.isPlaying) {
-      ambientEngine.play(prevId, cur.volume);
+      ambientEngine.play(prevId, cur.volume, cur.layers);
     }
     setAudio((prev) => ({ ...prev, trackId: prevId }));
   }, []);
@@ -171,7 +176,7 @@ export function App() {
     const cur = audioRef.current;
     const nextId = getNextTrackId(cur.trackId);
     if (cur.isPlaying) {
-      ambientEngine.play(nextId, cur.volume);
+      ambientEngine.play(nextId, cur.volume, cur.layers);
     }
     setAudio((prev) => ({ ...prev, trackId: nextId }));
   }, []);
@@ -181,6 +186,49 @@ export function App() {
     ambientEngine.setVolume(clamped);
     setAudio((prev) => ({ ...prev, volume: clamped }));
   }, []);
+
+  const handleChangeLayer = useCallback((layer: AmbientLayerKey, level: number) => {
+    const clamped = Math.max(0, Math.min(1, level));
+    ambientEngine.setLayerLevel(layer, clamped);
+    setAudio((prev) => ({
+      ...prev,
+      layers: { ...prev.layers, [layer]: clamped },
+    }));
+  }, []);
+
+  // Media Session API: hardware media keys, AirPods & lock screen controls
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
+    const track = getAmbientTrack(audio.trackId);
+    try {
+      if (typeof MediaMetadata !== 'undefined') {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: `${track.emoji} ${track.title}`,
+          artist: 'OCSC Meadow',
+          album: 'เสียงอ่านหนังสือ & Lo-fi',
+          artwork: [{ src: './app-icon.jpg', sizes: '512x512', type: 'image/jpeg' }],
+        });
+      }
+      navigator.mediaSession.playbackState = audio.isPlaying ? 'playing' : 'paused';
+      navigator.mediaSession.setActionHandler('play', () => {
+        const cur = audioRef.current;
+        if (!cur.isPlaying) {
+          const ok = ambientEngine.play(cur.trackId, cur.volume, cur.layers);
+          setAudio((prev) => ({ ...prev, isPlaying: ok }));
+        }
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        if (audioRef.current.isPlaying) {
+          ambientEngine.pause();
+          setAudio((prev) => ({ ...prev, isPlaying: false }));
+        }
+      });
+      navigator.mediaSession.setActionHandler('previoustrack', handlePrevTrack);
+      navigator.mediaSession.setActionHandler('nexttrack', handleNextTrack);
+    } catch {
+      // Ignore browsers with partial Media Session support
+    }
+  }, [audio.trackId, audio.isPlaying, handlePrevTrack, handleNextTrack]);
 
   const isReadingView = route.name !== 'dashboard';
   const isNight = isSceneDark(sceneId, hourFloat);
@@ -226,6 +274,7 @@ export function App() {
             onPrevTrack={handlePrevTrack}
             onNextTrack={handleNextTrack}
             onChangeVolume={handleChangeVolume}
+            onChangeLayer={handleChangeLayer}
           />
         )}
 

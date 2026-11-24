@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { AMBIENT_TRACKS } from '../ambientAudio';
-import { getAmbientTrack, getNextTrackId, getPrevTrackId } from '../musicStore';
+import { AMBIENT_LAYERS_META, AMBIENT_TRACKS } from '../ambientAudio';
+import {
+  createDefaultAmbientState,
+  getAmbientTrack,
+  getNextTrackId,
+  getPrevTrackId,
+} from '../musicStore';
 import { getLocalDateKey, hashString, makeWidgetId } from '../widgetUtils';
 
 describe('getLocalDateKey, makeWidgetId & hashString', () => {
@@ -15,12 +20,17 @@ describe('getLocalDateKey, makeWidgetId & hashString', () => {
   });
 });
 
-describe('Ambient & Lo-fi track navigation', () => {
-  it('cycles forward and backward cleanly across all 4 built-in tracks', () => {
-    expect(AMBIENT_TRACKS.length).toBe(4);
-    expect(getNextTrackId('rain')).toBe('lofi');
-    expect(getNextTrackId('focus')).toBe('rain');
-    expect(getPrevTrackId('rain')).toBe('focus');
-    expect(getAmbientTrack('lofi').title).toContain('Lo-fi');
+describe('Studio Lo-fi & Multi-Layer Ambient Player', () => {
+  it('cycles forward and backward cleanly across all 4 studio tracks and 4 ambient layers', () => {
+    expect(AMBIENT_TRACKS).toHaveLength(4);
+    expect(AMBIENT_LAYERS_META).toHaveLength(4);
+    expect(getNextTrackId('lofi-chill')).toBe('midnight-piano');
+    expect(getNextTrackId('deep-focus')).toBe('lofi-chill');
+    expect(getPrevTrackId('lofi-chill')).toBe('deep-focus');
+    expect(getAmbientTrack('lofi-chill').title).toContain('Lo-fi');
+
+    const defaults = createDefaultAmbientState();
+    expect(defaults.isPlaying).toBe(false);
+    expect(defaults.layers.rain).toBeGreaterThan(0);
   });
 });

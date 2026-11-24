@@ -1,4 +1,9 @@
-import { AMBIENT_TRACKS, type AmbientTrackId } from '../ambientAudio';
+import {
+  AMBIENT_LAYERS_META,
+  AMBIENT_TRACKS,
+  type AmbientLayerKey,
+  type AmbientTrackId,
+} from '../ambientAudio';
 import { getAmbientTrack } from '../musicStore';
 import type { AmbientPlayerState } from '../widgetTypes';
 
@@ -9,6 +14,7 @@ interface AmbientPlayerCardProps {
   onPrevTrack: () => void;
   onNextTrack: () => void;
   onChangeVolume: (volume: number) => void;
+  onChangeLayer: (layer: AmbientLayerKey, level: number) => void;
 }
 
 export function AmbientPlayerCard({
@@ -18,6 +24,7 @@ export function AmbientPlayerCard({
   onPrevTrack,
   onNextTrack,
   onChangeVolume,
+  onChangeLayer,
 }: AmbientPlayerCardProps) {
   const current = getAmbientTrack(audio.trackId);
 
@@ -27,7 +34,7 @@ export function AmbientPlayerCard({
         <div>
           <h2 className="widget-card-title">🎧 เสียงอ่านหนังสือ &amp; Lo-fi</h2>
           <p className="widget-card-sub">
-            ฝังในเว็บ 100% ฟังได้แม้ไม่มีเน็ต และเล่นต่อเนื่องข้ามทุกหน้า
+            มิกซ์เพลง Lo-fi คู่กับเสียงฝน/ลมได้อิสระ ฟังได้แม้ไม่มีเน็ตและเล่นข้ามทุกหน้า
           </p>
         </div>
         <span
@@ -55,8 +62,8 @@ export function AmbientPlayerCard({
             type="button"
             className="ambient-ctrl-btn"
             onClick={onPrevTrack}
-            title="เสียงก่อนหน้า"
-            aria-label="เสียงก่อนหน้า"
+            title="เพลงก่อนหน้า"
+            aria-label="เพลงก่อนหน้า"
           >
             ◀
           </button>
@@ -73,8 +80,8 @@ export function AmbientPlayerCard({
             type="button"
             className="ambient-ctrl-btn"
             onClick={onNextTrack}
-            title="เสียงถัดไป"
-            aria-label="เสียงถัดไป"
+            title="เพลงถัดไป"
+            aria-label="เพลงถัดไป"
           >
             ▶
           </button>
@@ -92,12 +99,12 @@ export function AmbientPlayerCard({
           value={Math.round(audio.volume * 100)}
           onChange={(e) => onChangeVolume(Number(e.target.value) / 100)}
           className="ambient-vol-slider"
-          aria-label="ปรับระดับเสียงพื้นหลัง"
+          aria-label="ปรับระดับเสียงรวม"
         />
         <span className="ambient-vol-pct">{Math.round(audio.volume * 100)}%</span>
       </div>
 
-      <div className="ambient-track-grid" role="list" aria-label="เลือกเสียงพื้นหลัง">
+      <div className="ambient-track-grid" role="list" aria-label="เลือกแนวเพลง">
         {AMBIENT_TRACKS.map((track) => {
           const isSelected = audio.trackId === track.id;
           return (
@@ -120,6 +127,48 @@ export function AmbientPlayerCard({
             </button>
           );
         })}
+      </div>
+
+      <div className="ambient-mixer-box" aria-label="มิกเซอร์เสียงธรรมชาติ">
+        <div className="ambient-mixer-head">
+          <span className="ambient-mixer-title">ซ้อนเสียงบรรยากาศ</span>
+          <span className="ambient-mixer-hint">เปิดคลอพร้อมเพลงได้</span>
+        </div>
+        <div className="ambient-mixer-grid">
+          {AMBIENT_LAYERS_META.map((layer) => {
+            const val = audio.layers[layer.key];
+            const isOn = val > 0.01;
+            return (
+              <div
+                key={layer.key}
+                className={`ambient-layer-row${
+                  isOn ? ' ambient-layer-row--on' : ''
+                }`}
+              >
+                <button
+                  type="button"
+                  className="ambient-layer-toggle"
+                  aria-pressed={isOn}
+                  onClick={() => onChangeLayer(layer.key, isOn ? 0 : 0.35)}
+                >
+                  <span aria-hidden="true">{layer.emoji}</span>
+                  <span>{layer.label}</span>
+                </button>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={Math.round(val * 100)}
+                  onChange={(e) =>
+                    onChangeLayer(layer.key, Number(e.target.value) / 100)
+                  }
+                  className="ambient-layer-slider"
+                  aria-label={`ระดับเสียง${layer.label}`}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
