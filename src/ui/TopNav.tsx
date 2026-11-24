@@ -47,9 +47,11 @@ export function TopNav({
   });
   const activeScene = getSceneOption(sceneId);
 
-  // Measure active tab button for silky sliding Liquid Glass pill
+  // Measure active tab button for silky sliding Liquid Glass pill (re-measures after font load & resize - F89)
   useLayoutEffect(() => {
+    let cancelled = false;
     const updatePill = () => {
+      if (cancelled) return;
       const nav = navLinksRef.current;
       if (!nav) return;
       const activeBtn = nav.querySelector<HTMLButtonElement>(`[data-nav-tab="${activeTabKey}"]`);
@@ -58,7 +60,17 @@ export function TopNav({
     };
     updatePill();
     window.addEventListener('resize', updatePill);
-    return () => window.removeEventListener('resize', updatePill);
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && navLinksRef.current) {
+      ro = new ResizeObserver(updatePill);
+      ro.observe(navLinksRef.current);
+    }
+    void document.fonts?.ready.then(updatePill);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('resize', updatePill);
+      ro?.disconnect();
+    };
   }, [activeTabKey]);
 
   useEffect(() => {

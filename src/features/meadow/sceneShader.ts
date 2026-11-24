@@ -372,7 +372,7 @@ void main() {
       vec2 rel = (uv - lamp) * vec2(aspect, 1.0);
       float dist = length(rel);
       float core = exp(-dist * 24.0) * 1.15 + exp(-dist * 7.5) * 0.35;
-      float beamAngle = -2.75 + sin(uTime * 0.55) * 0.34;
+      float beamAngle = 2.84 + sin(uTime * 0.55) * 0.24;
       vec2 dir = vec2(cos(beamAngle), sin(beamAngle));
       float along = dot(rel, dir);
       float perp = abs(rel.x * (-dir.y) + rel.y * dir.x);

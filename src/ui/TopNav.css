@@ -539,6 +539,11 @@
       inset 0 1.5px 0 rgba(255, 255, 255, 0.96);
   }
 
+  .top-nav-active-pill {
+    top: 5px;
+    bottom: 5px;
+  }
+
   .top-nav-link {
     min-height: 44px;
     padding: 5px 6px;
