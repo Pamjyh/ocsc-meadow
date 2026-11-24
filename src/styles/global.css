@@ -45,8 +45,8 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Subtle tactile press feedback across interactive buttons (excludes 3D flip cards & drag handles) */
-button:active:not(:disabled):not(.fc-card):not(.widget-drag-handle) {
+/* Subtle tactile press feedback across interactive buttons (excludes 3D flip cards & drag/resize handles - F79) */
+button:active:not(:disabled):not(.fc-card):not(.widget-drag-handle):not(.widget-resize-handle) {
   transform: scale(0.97);
 }
 
@@ -80,6 +80,10 @@ a {
   max-width: var(--content-max-width);
   margin: 0 auto;
   padding: 28px max(20px, env(safe-area-inset-left, 0px)) 88px max(20px, env(safe-area-inset-right, 0px));
+}
+
+/* Apply view-transition-name only during active page transitions so position:fixed modals are never trapped (F77) */
+.is-view-transitioning .app-main {
   view-transition-name: app-main;
 }
 
