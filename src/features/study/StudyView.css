@@ -813,3 +813,126 @@
   border-color: rgba(186, 218, 255, 0.26);
   color: #f0f6fc;
 }
+
+/* All-Highlights Review Modal & Cloze Flashcard Builder Modal */
+.study-all-hl-btn {
+  margin-top: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: rgba(255, 249, 214, 0.76);
+  color: #5c3d06;
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.study-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 92;
+  background: rgba(10, 22, 38, 0.48);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.study-modal-card {
+  width: min(640px, 100%);
+  max-height: min(84vh, 680px);
+  padding: 20px 22px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(244, 250, 255, 0.86));
+  backdrop-filter: blur(26px) saturate(200%);
+  -webkit-backdrop-filter: blur(26px) saturate(200%);
+  box-shadow: 0 22px 60px rgba(12, 32, 54, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: #102436;
+  overflow: hidden;
+}
+
+.study-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.study-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.06rem;
+  font-weight: 700;
+}
+
+.study-modal-body {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.cloze-source-box {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(20, 48, 74, 0.14);
+  font-size: 0.94rem;
+  line-height: 1.65;
+  user-select: text;
+}
+
+.cloze-preview-box {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(226, 248, 232, 0.72);
+  border: 1px solid rgba(46, 125, 82, 0.26);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #16482b;
+}
+
+.cloze-input {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(20, 48, 74, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  color: #102436;
+  font-size: 0.92rem;
+}
+
+.theme-night .study-all-hl-btn {
+  background: rgba(104, 86, 26, 0.64);
+  border-color: rgba(246, 220, 122, 0.34);
+  color: #fde68a;
+}
+
+.theme-night .study-modal-card {
+  background: linear-gradient(145deg, rgba(16, 30, 54, 0.94), rgba(10, 20, 38, 0.9));
+  border-color: rgba(186, 218, 255, 0.28);
+  color: #f0f6fc;
+}
+
+.theme-night .cloze-source-box,
+.theme-night .cloze-input {
+  background: rgba(14, 28, 52, 0.84);
+  border-color: rgba(186, 218, 255, 0.26);
+  color: #f0f6fc;
+}
+
+.theme-night .cloze-preview-box {
+  background: rgba(20, 74, 50, 0.56);
+  border-color: rgba(110, 231, 183, 0.32);
+  color: #c6f6d5;
+}

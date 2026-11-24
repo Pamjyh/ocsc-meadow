@@ -3,7 +3,12 @@ import type { ChoiceKey } from '../../domain/models';
 import { renderQuestionMarkdown } from '../../domain/sanitize';
 import { playUiSound } from '../../services/uiSound';
 import { recordStudyActivity } from '../widgets/streakStore';
-import { OCSC_FLASHCARDS } from './flashcardData';
+import {
+  isCustomFlashcardId,
+  loadCustomFlashcards,
+  removeCustomFlashcard,
+} from './customFlashcardsStore';
+import { OCSC_FLASHCARDS, type StudyFlashcard } from './flashcardData';
 import {
   ERROR_CAUSE_OPTIONS,
   loadFlashcardSrsMap,
@@ -40,6 +45,7 @@ const RATING_LABELS: readonly { rating: SrsRating; label: string; keyHint: strin
 
 export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelProps) {
   const [subMode, setSubMode] = useState<'flashcards' | 'mistakes'>('flashcards');
+  const [customCards, setCustomCards] = useState<StudyFlashcard[]>(loadCustomFlashcards);
   const [srsMap, setSrsMap] = useState<FlashcardSrsMap>(loadFlashcardSrsMap);
   const [mistakes, setMistakes] = useState<MistakeRecord[]>(loadMistakes);
   const [flipped, setFlipped] = useState(false);
@@ -48,12 +54,20 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
   const [revealedMistakeIds, setRevealedMistakeIds] = useState<Record<string, boolean>>({});
   const [nowTick, setNowTick] = useState(() => Date.now());
 
+  useEffect(() => {
+    const syncCustom = () => setCustomCards(loadCustomFlashcards());
+    window.addEventListener('ocsc-custom-cards-updated', syncCustom);
+    return () => window.removeEventListener('ocsc-custom-cards-updated', syncCustom);
+  }, []);
+
+  const allCards = useMemo(() => [...customCards, ...OCSC_FLASHCARDS], [customCards]);
+
   const filteredCards = useMemo(
     () =>
       subjectFilter === 'all'
-        ? OCSC_FLASHCARDS
-        : OCSC_FLASHCARDS.filter((c) => c.subjectCode === subjectFilter),
-    [subjectFilter],
+        ? allCards
+        : allCards.filter((c) => c.subjectCode === subjectFilter),
+    [allCards, subjectFilter],
   );
 
   const dueCards = useMemo(
@@ -273,14 +287,32 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
                 })}
               </div>
             ) : (
-              <button
-                type="button"
-                className="exam-btn-timed"
-                style={{ minWidth: 200 }}
-                onClick={() => setFlipped(true)}
-              >
-                พลิกดูเฉลย (Space)
-              </button>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  className="exam-btn-timed"
+                  style={{ minWidth: 200 }}
+                  onClick={() => {
+                    playUiSound('flip');
+                    setFlipped(true);
+                  }}
+                >
+                  พลิกดูเฉลย (Space)
+                </button>
+                {isCustomFlashcardId(activeCard.id) && (
+                  <button
+                    type="button"
+                    className="study-action-btn"
+                    onClick={() => {
+                      playUiSound('tap');
+                      setCustomCards(removeCustomFlashcard(activeCard.id));
+                      setFlipped(false);
+                    }}
+                  >
+                    🗑️ ลบการ์ดส่วนตัวนี้
+                  </button>
+                )}
+              </div>
             )}
           </div>
         ) : (

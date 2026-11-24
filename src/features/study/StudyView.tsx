@@ -15,6 +15,10 @@ import {
   type GlassIconName,
   type GlassIconTone,
 } from '../../ui/LiquidGlassIcon';
+import {
+  addCustomClozeFlashcard,
+  buildClozeFront,
+} from '../exams/customFlashcardsStore';
 import { recordStudyActivity } from '../widgets/streakStore';
 import {
   loadAllBlurts,
@@ -27,6 +31,7 @@ import {
   normalizeHighlightText,
   removeStudyHighlight,
   type HighlightColor,
+  type StudyHighlight,
   type StudyHighlightsMap,
 } from './studyHighlightsStore';
 import './StudyView.css';
@@ -75,6 +80,10 @@ export function StudyView({
   const [blurtMode, setBlurtMode] = useState<'read' | 'blurt' | 'compare'>('read');
   const [blurtMap, setBlurtMap] = useState<StudyBlurtMap>(loadAllBlurts);
   const [blurtDraft, setBlurtDraft] = useState('');
+  const [allHighlightsOpen, setAllHighlightsOpen] = useState(false);
+  const [allHlColorFilter, setAllHlColorFilter] = useState<'all' | HighlightColor>('all');
+  const [clozeTarget, setClozeTarget] = useState<{ hl: StudyHighlight; docTitle: string; subjectCode: SubjectCode } | null>(null);
+  const [clozePhrase, setClozePhrase] = useState('');
   const blurtMapRef = useRef(blurtMap);
   blurtMapRef.current = blurtMap;
   const proseRef = useRef<HTMLDivElement | null>(null);
@@ -313,6 +322,45 @@ export function StudyView({
   }, [selectedItem?.id]);
 
   const docHighlights = selectedItem ? (highlightsMap[selectedItem.id] ?? []) : [];
+  const studyItemById = useMemo(() => new Map(studyItems.map((s) => [s.id, s])), [studyItems]);
+  const allHighlightsFlat = useMemo(() => {
+    const rows: { hl: StudyHighlight; docTitle: string; subjectCode: SubjectCode }[] = [];
+    for (const [docId, list] of Object.entries(highlightsMap)) {
+      const meta = studyItemById.get(docId);
+      if (!meta) continue;
+      for (const hl of list) {
+        rows.push({ hl, docTitle: meta.title, subjectCode: meta.subjectCode });
+      }
+    }
+    return rows.sort((a, b) => b.hl.createdAt.localeCompare(a.hl.createdAt));
+  }, [highlightsMap, studyItemById]);
+
+  const openClozeBuilder = (hl: StudyHighlight, docTitle: string, subjectCode: SubjectCode) => {
+    setClozeTarget({ hl, docTitle, subjectCode });
+    setClozePhrase('');
+  };
+
+  const clozePreview = clozeTarget ? buildClozeFront(clozeTarget.hl.text, clozePhrase) : null;
+
+  const handleCreateClozeCard = () => {
+    if (!clozeTarget || !clozePreview) return;
+    const res = addCustomClozeFlashcard({
+      subjectCode: clozeTarget.subjectCode,
+      tag: clozeTarget.docTitle,
+      fullText: clozeTarget.hl.text,
+      hiddenPhrase: clozePhrase,
+    });
+    if (res.added) {
+      playUiSound('checkin');
+      showToast({
+        message: 'สร้างแฟลชการ์ดเติมคำ (Cloze) แล้ว!',
+        detail: 'เข้าไปทบทวนได้ที่ คลังข้อสอบ → แฟลชการ์ด FSRS',
+        tone: 'success',
+      });
+      setClozeTarget(null);
+      setClozePhrase('');
+    }
+  };
 
   const handleClearBlurt = () => {
     if (!selectedItem) return;
@@ -432,6 +480,19 @@ export function StudyView({
               </button>
             ))}
           </div>
+
+          {allHighlightsFlat.length > 0 && (
+            <button
+              type="button"
+              className="study-all-hl-btn"
+              onClick={() => {
+                playUiSound('tap');
+                setAllHighlightsOpen(true);
+              }}
+            >
+              📌 รวมไฮไลต์ทั้งหมดทุกบท ({allHighlightsFlat.length})
+            </button>
+          )}
 
           <div className="study-tree">
             {subjects.map((subject) => {
@@ -593,6 +654,17 @@ export function StudyView({
                         <div key={hl.id} className={`study-hl-card study-hl-card--${hl.color}`}>
                           <span className="study-hl-text">{hl.text}</span>
                           <span className="study-hl-actions">
+                            <button
+                              type="button"
+                              className="study-hl-icon-btn"
+                              onClick={() =>
+                                openClozeBuilder(hl, selectedItem.title, selectedItem.subjectCode)
+                              }
+                              aria-label="แปลงเป็นการ์ดเติมคำ Cloze"
+                              title="แปลงเป็นแฟลชการ์ดเติมคำ (Cloze)"
+                            >
+                              🃏
+                            </button>
                             <button
                               type="button"
                               className="study-hl-icon-btn"
@@ -795,6 +867,162 @@ export function StudyView({
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {allHighlightsOpen && (
+        <div
+          className="study-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="รวมไฮไลต์ทั้งหมดทุกบท"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setAllHighlightsOpen(false);
+          }}
+        >
+          <div className="study-modal-card">
+            <div className="study-modal-head">
+              <strong className="study-modal-title">
+                📌 รวมไฮไลต์ทั้งหมดทุกบท ({allHighlightsFlat.length})
+              </strong>
+              <button
+                type="button"
+                className="study-action-btn"
+                onClick={() => setAllHighlightsOpen(false)}
+              >
+                ปิด
+              </button>
+            </div>
+
+            <div className="exams-subject-pills">
+              {(
+                [
+                  ['all', 'ทั้งหมด'],
+                  ['yellow', '🟡 เน้นจำ'],
+                  ['mint', '🟢 สูตร/หลัก'],
+                  ['pink', '🩷 ระวังออกสอบ'],
+                ] as const
+              ).map(([cKey, label]) => (
+                <button
+                  key={cKey}
+                  type="button"
+                  className={`exams-filter-pill${
+                    allHlColorFilter === cKey ? ' exams-filter-pill--active' : ''
+                  }`}
+                  onClick={() => setAllHlColorFilter(cKey)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <div className="study-modal-body">
+              {allHighlightsFlat
+                .filter((row) => allHlColorFilter === 'all' || row.hl.color === allHlColorFilter)
+                .map(({ hl, docTitle, subjectCode }) => (
+                  <div key={hl.id} className={`study-hl-card study-hl-card--${hl.color}`}>
+                    <div className="study-hl-text">
+                      <div style={{ fontSize: '0.74rem', opacity: 0.78, marginBottom: 2 }}>
+                        {docTitle}
+                      </div>
+                      <div>{hl.text}</div>
+                    </div>
+                    <span className="study-hl-actions">
+                      <button
+                        type="button"
+                        className="study-hl-icon-btn"
+                        onClick={() => openClozeBuilder(hl, docTitle, subjectCode)}
+                        title="แปลงเป็นแฟลชการ์ดเติมคำ"
+                        aria-label="แปลงเป็นแฟลชการ์ดเติมคำ"
+                      >
+                        🃏
+                      </button>
+                      <button
+                        type="button"
+                        className="study-hl-icon-btn"
+                        onClick={() => {
+                          setAllHighlightsOpen(false);
+                          onNavigate({ name: 'study', docId: hl.docId });
+                        }}
+                        title="เปิดอ่านบทนี้"
+                        aria-label="เปิดอ่านบทนี้"
+                      >
+                        ↗
+                      </button>
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {clozeTarget && (
+        <div
+          className="study-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="สร้างแฟลชการ์ดเติมคำ Cloze"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setClozeTarget(null);
+          }}
+        >
+          <div className="study-modal-card">
+            <div className="study-modal-head">
+              <strong className="study-modal-title">🃏 แปลงไฮไลต์เป็นการ์ดเติมคำ (Cloze)</strong>
+              <button
+                type="button"
+                className="study-action-btn"
+                onClick={() => setClozeTarget(null)}
+              >
+                ปิด
+              </button>
+            </div>
+
+            <div
+              className="cloze-source-box"
+              onMouseUp={() => {
+                const picked = window.getSelection()?.toString().trim() ?? '';
+                if (picked.length >= 2 && clozeTarget.hl.text.toLowerCase().includes(picked.toLowerCase())) {
+                  setClozePhrase(picked);
+                }
+              }}
+            >
+              {clozeTarget.hl.text}
+            </div>
+
+            <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>
+              พิมพ์หรือลากคลุมคำด้านบนที่ต้องการซ่อนเป็น [ ..... ]:
+              <input
+                type="text"
+                className="cloze-input"
+                style={{ marginTop: 6 }}
+                placeholder="เช่น มาตรา 30 หรือคำศัพท์สำคัญ..."
+                value={clozePhrase}
+                onChange={(e) => setClozePhrase(e.target.value)}
+              />
+            </label>
+
+            {clozePreview && (
+              <div className="cloze-preview-box">
+                <div style={{ fontSize: '0.76rem', fontWeight: 700, marginBottom: 4 }}>
+                  ตัวอย่างหน้าการ์ด:
+                </div>
+                <div>{clozePreview}</div>
+              </div>
+            )}
+
+            <div className="study-blurt-actions">
+              <button
+                type="button"
+                className="study-nav-btn study-nav-btn--primary"
+                disabled={!clozePreview}
+                onClick={handleCreateClozeCard}
+              >
+                บันทึกเข้าแฟลชการ์ด FSRS
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
