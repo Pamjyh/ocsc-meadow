@@ -19,6 +19,7 @@ import { DailyGoalsCard } from '../widgets/cards/DailyGoalsCard';
 import { PhotoCollectionCard } from '../widgets/cards/PhotoCollectionCard';
 import { QuickStudyCard } from '../widgets/cards/QuickStudyCard';
 import { StickyNoteCard } from '../widgets/cards/StickyNoteCard';
+import { StudyStreakCard } from '../widgets/cards/StudyStreakCard';
 import { FreeformWidgetGrid } from '../widgets/FreeformWidgetGrid';
 import { WidgetGalleryModal } from '../widgets/WidgetGalleryModal';
 import {
@@ -407,6 +408,9 @@ export function DashboardView({
             onUpdateConfig={(patch) => handleUpdateConfig(item.id, patch)}
           />
         );
+
+      case 'study_streak':
+        return <StudyStreakCard />;
 
       case 'aesthetic_clock':
         return (

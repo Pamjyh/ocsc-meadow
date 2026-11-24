@@ -10,6 +10,7 @@ export type ExtraWidgetType =
   | 'ytm_player'
   | 'photo_collection'
   | 'sticky_note'
+  | 'study_streak'
   | 'aesthetic_clock'
   | 'daily_goals'
   | 'quick_study';
@@ -192,6 +193,21 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     },
   },
   {
+    type: 'study_streak',
+    title: 'สถิติความสม่ำเสมอ (Heatmap)',
+    description: 'ตารางความสม่ำเสมอ 12 สัปดาห์ พร้อมนับวันต่อเนื่องและเช็กอินอ่านหนังสือประจำวัน',
+    emoji: '🔥',
+    group: 'study',
+    isCore: false,
+    multiInstance: false,
+    defaultVisible: true,
+    defaultSize: 'half',
+    defaultGrid: { x: 6, y: 20, w: 6, h: 5 },
+    minW: 4,
+    minH: 5,
+    defaultConfig: {},
+  },
+  {
     type: 'aesthetic_clock',
     title: 'นาฬิกา & คำทักทาย',
     description: 'นาฬิกาสบายตาพร้อมคำทักทายตามช่วงเวลาและข้อความส่วนตัว',
@@ -201,7 +217,7 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     multiInstance: false,
     defaultVisible: false,
     defaultSize: 'half',
-    defaultGrid: { x: 6, y: 20, w: 6, h: 5 },
+    defaultGrid: { x: 6, y: 25, w: 6, h: 5 },
     minW: 3,
     minH: 4,
     defaultConfig: {

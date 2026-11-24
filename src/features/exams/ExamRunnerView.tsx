@@ -14,6 +14,7 @@ import {
 import { gradeExam } from '../../domain/scoring';
 import { loadExamDetail } from '../../services/dataRepository';
 import type { AppRoute } from '../../services/router';
+import { recordStudyActivity } from '../widgets/streakStore';
 import { ExamScratchpad, type ScratchStroke } from './ExamScratchpad';
 import { recordExamMistakes } from './reviewStore';
 import './ExamsView.css';
@@ -155,6 +156,7 @@ export function ExamRunnerView({
         detail.questions,
         finalAnswers,
       );
+      recordStudyActivity(2);
 
       setSubmittedAttempt(attempt);
       onUpdateProgress((prev) => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChoiceKey } from '../../domain/models';
 import { renderQuestionMarkdown } from '../../domain/sanitize';
+import { recordStudyActivity } from '../widgets/streakStore';
 import { OCSC_FLASHCARDS } from './flashcardData';
 import {
   loadFlashcardSrsMap,
@@ -77,6 +78,7 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
       if (!activeCard) return;
       const ts = Date.now();
       setSrsMap(rateFlashcard(activeCard.id, rating, ts));
+      recordStudyActivity(1);
       setNowTick(ts);
       setFlipped(false);
       if (practiceAll) {
@@ -125,6 +127,7 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
   const handleRateMistake = (id: string, rating: SrsRating) => {
     const ts = Date.now();
     setMistakes(rateMistakeRecord(id, rating, ts));
+    recordStudyActivity(1);
     setNowTick(ts);
     setRevealedMistakeIds((prev) => ({ ...prev, [id]: false }));
   };

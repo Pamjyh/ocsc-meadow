@@ -1,0 +1,98 @@
+/* Study Streak Heatmap Widget */
+.streak-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.streak-kpi-box {
+  padding: 10px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.streak-kpi-num {
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+  font-weight: 700;
+  color: #102436;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-kpi-label {
+  font-size: 0.72rem;
+  color: #365066;
+}
+
+.streak-heatmap {
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  overflow-x: auto;
+}
+
+.streak-cell {
+  width: 100%;
+  min-width: 11px;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  display: block;
+}
+
+.streak-cell--l0 { background: rgba(20, 48, 74, 0.09); }
+.streak-cell--l1 { background: rgba(74, 186, 126, 0.38); }
+.streak-cell--l2 { background: rgba(46, 160, 102, 0.62); }
+.streak-cell--l3 { background: rgba(30, 134, 82, 0.82); }
+.streak-cell--l4 { background: #166534; }
+
+.streak-legend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #466078;
+}
+
+.streak-legend-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.streak-legend-scale .streak-cell {
+  width: 11px;
+  height: 11px;
+}
+
+/* Night Mode */
+.theme-night .streak-kpi-box,
+.theme-night .streak-heatmap {
+  background: rgba(16, 30, 54, 0.68);
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .streak-kpi-num {
+  color: #f1f6fc;
+}
+
+.theme-night .streak-kpi-label,
+.theme-night .streak-legend {
+  color: #c2d6eb;
+}
+
+.theme-night .streak-cell--l0 { background: rgba(186, 218, 255, 0.12); }
+.theme-night .streak-cell--l1 { background: rgba(74, 222, 128, 0.30); }
+.theme-night .streak-cell--l2 { background: rgba(52, 211, 153, 0.54); }
+.theme-night .streak-cell--l3 { background: rgba(34, 197, 94, 0.78); }
+.theme-night .streak-cell--l4 { background: #4ade80; }

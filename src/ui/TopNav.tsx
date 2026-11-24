@@ -16,6 +16,7 @@ interface TopNavProps {
   onNavigate: (next: AppRoute) => void;
   onToggleFocusMode: () => void;
   onSelectScene: (sceneId: SceneId) => void;
+  onEnterZen: () => void;
 }
 
 export function TopNav({
@@ -26,6 +27,7 @@ export function TopNav({
   onNavigate,
   onToggleFocusMode,
   onSelectScene,
+  onEnterZen,
 }: TopNavProps) {
   const isExams = route.name === 'exams' || route.name === 'exam-runner';
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -164,6 +166,17 @@ export function TopNav({
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            className="top-nav-zen-btn"
+            onClick={onEnterZen}
+            aria-label="เข้าสู่โหมด Zen เต็มจอ"
+            title="โหมด Zen เต็มจอ (ซ่อนหน้าต่างเพื่อโฟกัส)"
+          >
+            <span className="zen-btn-icon" aria-hidden="true">⛶</span>
+            <span className="zen-btn-label">Zen</span>
+          </button>
 
           <button
             type="button"

@@ -37,6 +37,7 @@ import {
 import { useHashRoute } from './services/router';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
 import { TopNav } from './ui/TopNav';
+import { ZenFocusOverlay } from './ui/ZenFocusOverlay';
 
 export function App() {
   const { route, navigate } = useHashRoute();
@@ -47,6 +48,7 @@ export function App() {
   const [selectedExamMode, setSelectedExamMode] = useState<ExamMode>('timed');
   const [audio, setAudio] = useState<AmbientPlayerState>(loadAmbientState);
   const [sceneId, setSceneId] = useState<SceneId>(loadSelectedScene);
+  const [zenMode, setZenMode] = useState(false);
 
   const audioRef = useRef<AmbientPlayerState>(audio);
   audioRef.current = audio;
@@ -230,6 +232,44 @@ export function App() {
     }
   }, [audio.trackId, audio.isPlaying, handlePrevTrack, handleNextTrack]);
 
+  const handleEnterZen = useCallback(() => {
+    setZenMode(true);
+    try {
+      const el = document.documentElement;
+      if (el.requestFullscreen && !document.fullscreenElement) {
+        void el.requestFullscreen().catch(() => {
+          // Graceful CSS fullscreen fallback (e.g. iOS Safari)
+        });
+      }
+    } catch {
+      // Ignore fullscreen API errors
+    }
+  }, []);
+
+  const handleExitZen = useCallback(() => {
+    setZenMode(false);
+    try {
+      if (document.fullscreenElement && document.exitFullscreen) {
+        void document.exitFullscreen().catch(() => {
+          // Ignore fullscreen exit errors
+        });
+      }
+    } catch {
+      // Ignore fullscreen API errors
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!zenMode) return;
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setZenMode(false);
+      }
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, [zenMode]);
+
   const isReadingView = route.name !== 'dashboard';
   const isNight = isSceneDark(sceneId, hourFloat);
 
@@ -246,77 +286,92 @@ export function App() {
 
       <MeadowScene
         sceneId={sceneId}
-        dimmed={isReadingView}
+        dimmed={isReadingView && !zenMode}
         focusMode={progress.preferences.focusMode}
         hourFloat={hourFloat}
       />
 
-      <TopNav
-        siteTitle={bootstrap.config.siteTitle}
-        route={route}
-        focusMode={progress.preferences.focusMode}
-        sceneId={sceneId}
-        onNavigate={navigate}
-        onToggleFocusMode={toggleFocusMode}
-        onSelectScene={setSceneId}
-      />
-
-      <main className="app-main">
-        {route.name === 'dashboard' && (
-          <DashboardView
-            bootstrap={bootstrap}
-            progress={progress}
-            syncStatus={syncStatus}
+      {zenMode ? (
+        <ZenFocusOverlay
+          sceneId={sceneId}
+          audio={audio}
+          onSelectScene={setSceneId}
+          onTogglePlay={handleTogglePlay}
+          onPrevTrack={handlePrevTrack}
+          onNextTrack={handleNextTrack}
+          onExit={handleExitZen}
+        />
+      ) : (
+        <>
+          <TopNav
+            siteTitle={bootstrap.config.siteTitle}
+            route={route}
+            focusMode={progress.preferences.focusMode}
+            sceneId={sceneId}
             onNavigate={navigate}
+            onToggleFocusMode={toggleFocusMode}
+            onSelectScene={setSceneId}
+            onEnterZen={handleEnterZen}
+          />
+
+          <main className="app-main">
+            {route.name === 'dashboard' && (
+              <DashboardView
+                bootstrap={bootstrap}
+                progress={progress}
+                syncStatus={syncStatus}
+                onNavigate={navigate}
+                audio={audio}
+                onSelectTrack={handleSelectTrack}
+                onTogglePlay={handleTogglePlay}
+                onPrevTrack={handlePrevTrack}
+                onNextTrack={handleNextTrack}
+                onChangeVolume={handleChangeVolume}
+                onChangeLayer={handleChangeLayer}
+              />
+            )}
+
+            {route.name === 'study' && (
+              <StudyView
+                bootstrap={bootstrap}
+                progress={progress}
+                activeDocId={route.docId}
+                onNavigate={navigate}
+                onUpdateProgress={updateProgress}
+              />
+            )}
+
+            {route.name === 'exams' && (
+              <ExamsHubView
+                bootstrap={bootstrap}
+                progress={progress}
+                activeTab={route.tab}
+                onNavigate={navigate}
+                onStartExam={handleStartExam}
+                onUpdateProgress={updateProgress}
+              />
+            )}
+
+            {route.name === 'exam-runner' && (
+              <ExamRunnerView
+                key={route.examId}
+                examId={route.examId}
+                initialMode={selectedExamMode}
+                progress={progress}
+                onNavigate={navigate}
+                onUpdateProgress={updateProgress}
+              />
+            )}
+          </main>
+
+          <GlobalMusicDock
             audio={audio}
-            onSelectTrack={handleSelectTrack}
             onTogglePlay={handleTogglePlay}
             onPrevTrack={handlePrevTrack}
             onNextTrack={handleNextTrack}
-            onChangeVolume={handleChangeVolume}
-            onChangeLayer={handleChangeLayer}
           />
-        )}
-
-        {route.name === 'study' && (
-          <StudyView
-            bootstrap={bootstrap}
-            progress={progress}
-            activeDocId={route.docId}
-            onNavigate={navigate}
-            onUpdateProgress={updateProgress}
-          />
-        )}
-
-        {route.name === 'exams' && (
-          <ExamsHubView
-            bootstrap={bootstrap}
-            progress={progress}
-            activeTab={route.tab}
-            onNavigate={navigate}
-            onStartExam={handleStartExam}
-            onUpdateProgress={updateProgress}
-          />
-        )}
-
-        {route.name === 'exam-runner' && (
-          <ExamRunnerView
-            key={route.examId}
-            examId={route.examId}
-            initialMode={selectedExamMode}
-            progress={progress}
-            onNavigate={navigate}
-            onUpdateProgress={updateProgress}
-          />
-        )}
-      </main>
-
-      <GlobalMusicDock
-        audio={audio}
-        onTogglePlay={handleTogglePlay}
-        onPrevTrack={handlePrevTrack}
-        onNextTrack={handleNextTrack}
-      />
+        </>
+      )}
 
       <PomodoroWidget
         muted={progress.preferences.pomodoroMuted}
