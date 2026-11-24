@@ -7,8 +7,13 @@ import {
   recordStudyActivity,
   type StudyActivityMap,
 } from '../streakStore';
+import { showToast } from '../../../services/toast';
+import { playUiSound } from '../../../services/uiSound';
+import { launchConfetti } from '../../../ui/confetti';
 import { getLocalDateKey } from '../widgetUtils';
 import './StudyStreakCard.css';
+
+const STREAK_MILESTONES = new Set([3, 7, 14, 21, 30, 50, 100]);
 
 export function StudyStreakCard() {
   const [activity, setActivity] = useState<StudyActivityMap>(loadStudyActivity);
@@ -40,7 +45,25 @@ export function StudyStreakCard() {
   const cells = useMemo(() => buildHeatmapCells(activity, 84), [activity, todayKey]);
 
   const handleCheckIn = () => {
-    recordStudyActivity(1);
+    const wasFirstToday = summary.todayCount === 0;
+    const nextMap = recordStudyActivity(1);
+    const nextSummary = computeStreakSummary(nextMap);
+    if (wasFirstToday && STREAK_MILESTONES.has(nextSummary.currentStreak)) {
+      playUiSound('celebrate');
+      launchConfetti({ intensity: 'soft' });
+      showToast({
+        message: `อ่านต่อเนื่องครบ ${nextSummary.currentStreak} วันแล้ว!`,
+        detail: 'รักษาความสม่ำเสมอแบบนี้ไว้ เยี่ยมมากครับ',
+        tone: 'celebrate',
+      });
+    } else {
+      playUiSound('checkin');
+      showToast({
+        message: 'เช็กอินอ่านหนังสือวันนี้แล้ว',
+        detail: `สะสมวันนี้ ${nextSummary.todayCount} กิจกรรม`,
+        tone: 'success',
+      });
+    }
   };
 
   return (

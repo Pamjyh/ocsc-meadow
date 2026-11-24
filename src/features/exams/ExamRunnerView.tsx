@@ -14,6 +14,9 @@ import {
 import { gradeExam } from '../../domain/scoring';
 import { loadExamDetail } from '../../services/dataRepository';
 import type { AppRoute } from '../../services/router';
+import { showToast } from '../../services/toast';
+import { playUiSound } from '../../services/uiSound';
+import { launchConfetti } from '../../ui/confetti';
 import { recordStudyActivity } from '../widgets/streakStore';
 import { ExamScratchpad, type ScratchStroke } from './ExamScratchpad';
 import { recordExamMistakes } from './reviewStore';
@@ -157,6 +160,23 @@ export function ExamRunnerView({
         finalAnswers,
       );
       recordStudyActivity(2);
+      if (attempt.passed) {
+        playUiSound('celebrate');
+        launchConfetti({ intensity: 'celebrate' });
+        showToast({
+          message: `ผ่านเกณฑ์ ก.พ. แล้ว! (${attempt.percent}%)`,
+          detail: `ได้ ${attempt.score} / ${attempt.total} คะแนน`,
+          tone: 'celebrate',
+          durationMs: 4200,
+        });
+      } else {
+        playUiSound('checkin');
+        showToast({
+          message: `ส่งข้อสอบแล้ว (${attempt.score}/${attempt.total})`,
+          detail: 'เก็บข้อที่ตอบผิดลงสมุดทบทวนให้เรียบร้อย',
+          tone: 'info',
+        });
+      }
 
       setSubmittedAttempt(attempt);
       onUpdateProgress((prev) => {
@@ -193,6 +213,7 @@ export function ExamRunnerView({
   }, [mode, submittedAttempt, detail, handleSubmit]);
 
   const selectChoice = (questionId: string, choice: ChoiceKey) => {
+    playUiSound('tap');
     const nextAnswers = { ...answers, [questionId]: choice };
     setAnswers(nextAnswers);
     persistSession(nextAnswers, flaggedIds, remainingSeconds);

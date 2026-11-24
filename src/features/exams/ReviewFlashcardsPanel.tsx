@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChoiceKey } from '../../domain/models';
 import { renderQuestionMarkdown } from '../../domain/sanitize';
+import { playUiSound } from '../../services/uiSound';
 import { recordStudyActivity } from '../widgets/streakStore';
 import { OCSC_FLASHCARDS } from './flashcardData';
 import {
@@ -79,6 +80,7 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
       const ts = Date.now();
       setSrsMap(rateFlashcard(activeCard.id, rating, ts));
       recordStudyActivity(1);
+      playUiSound(rating >= 3 ? 'checkin' : 'tap');
       setNowTick(ts);
       setFlipped(false);
       if (practiceAll) {
@@ -107,6 +109,7 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
           return;
         }
         e.preventDefault();
+        playUiSound('flip');
         setFlipped((prev) => !prev);
       } else if (flipped && ['1', '2', '3', '4'].includes(e.key)) {
         e.preventDefault();
@@ -128,6 +131,7 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
     const ts = Date.now();
     setMistakes(rateMistakeRecord(id, rating, ts));
     recordStudyActivity(1);
+    playUiSound(rating >= 3 ? 'checkin' : 'tap');
     setNowTick(ts);
     setRevealedMistakeIds((prev) => ({ ...prev, [id]: false }));
   };
@@ -189,7 +193,10 @@ export function ReviewFlashcardsPanel({ subjectFilter }: ReviewFlashcardsPanelPr
               <button
                 type="button"
                 className={`fc-card${flipped ? ' fc-card--flipped' : ''}`}
-                onClick={() => setFlipped((prev) => !prev)}
+                onClick={() => {
+                  playUiSound('flip');
+                  setFlipped((prev) => !prev);
+                }}
                 aria-label={flipped ? 'พลิกกลับด้านคำถาม' : 'พลิกดูคำตอบ'}
               >
                 <div className="fc-face fc-face--front">

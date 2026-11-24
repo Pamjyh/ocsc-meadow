@@ -8,6 +8,9 @@ import type {
 import { sanitizeStudyHtml } from '../../domain/sanitize';
 import { loadStudyDoc } from '../../services/dataRepository';
 import type { AppRoute } from '../../services/router';
+import { showToast } from '../../services/toast';
+import { playUiSound } from '../../services/uiSound';
+import { recordStudyActivity } from '../widgets/streakStore';
 import {
   LiquidGlassIcon,
   type GlassIconName,
@@ -136,26 +139,43 @@ export function StudyView({
 
   const toggleCompleted = () => {
     if (!selectedItem) return;
+    const nextActive = !isCompleted;
     const now = new Date().toISOString();
     onUpdateProgress((prev) => ({
       ...prev,
       completedStudies: {
         ...prev.completedStudies,
-        [selectedItem.id]: { active: !isCompleted, updatedAt: now },
+        [selectedItem.id]: { active: nextActive, updatedAt: now },
       },
     }));
+    if (nextActive) {
+      playUiSound('checkin');
+      recordStudyActivity(1);
+      showToast({
+        message: 'อ่านจบบทนี้แล้ว!',
+        detail: selectedItem.title,
+        tone: 'success',
+      });
+    } else {
+      playUiSound('tap');
+    }
   };
 
   const toggleBookmarked = () => {
     if (!selectedItem) return;
+    const nextBm = !isBookmarked;
     const now = new Date().toISOString();
     onUpdateProgress((prev) => ({
       ...prev,
       bookmarkedStudies: {
         ...prev.bookmarkedStudies,
-        [selectedItem.id]: { active: !isBookmarked, updatedAt: now },
+        [selectedItem.id]: { active: nextBm, updatedAt: now },
       },
     }));
+    playUiSound('tap');
+    if (nextBm) {
+      showToast({ message: 'บุ๊กมาร์กบทเรียนไว้แล้ว', detail: selectedItem.title, tone: 'info' });
+    }
   };
 
   const setFontSize = (size: 'sm' | 'md' | 'lg') => {
@@ -175,6 +195,13 @@ export function StudyView({
           [selectedItem.id]: { active: true, updatedAt: now },
         },
       }));
+      playUiSound('checkin');
+      recordStudyActivity(1);
+      showToast({
+        message: 'อ่านจบบทนี้แล้ว!',
+        detail: selectedItem.title,
+        tone: 'success',
+      });
     }
     if (nextItem) {
       onNavigate({ name: 'study', docId: nextItem.id });

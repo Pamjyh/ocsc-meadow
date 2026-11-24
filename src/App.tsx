@@ -35,7 +35,9 @@ import {
   type SyncStatus,
 } from './services/dataRepository';
 import { useHashRoute } from './services/router';
+import { isUiSfxEnabled, playUiSound, setUiSfxEnabled } from './services/uiSound';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
+import { ToastHost } from './ui/ToastHost';
 import { TopNav } from './ui/TopNav';
 import { ZenFocusOverlay } from './ui/ZenFocusOverlay';
 
@@ -51,6 +53,7 @@ export function App() {
   const [audio, setAudio] = useState<AmbientPlayerState>(loadAmbientState);
   const [sceneId, setSceneId] = useState<SceneId>(loadSelectedScene);
   const [zenMode, setZenMode] = useState(false);
+  const [sfxEnabled, setSfxEnabled] = useState<boolean>(isUiSfxEnabled);
 
   const audioRef = useRef<AmbientPlayerState>(audio);
   audioRef.current = audio;
@@ -148,6 +151,15 @@ export function App() {
       },
     }));
   }, [updateProgress]);
+
+  const handleToggleSfx = useCallback(() => {
+    setSfxEnabled((prev) => {
+      const next = !prev;
+      setUiSfxEnabled(next);
+      if (next) playUiSound('tap');
+      return next;
+    });
+  }, []);
 
   // F49: Synchronous Web Audio resume/play inside user click handlers for Safari/iOS
   const handleSelectTrack = useCallback((trackId: AmbientTrackId) => {
@@ -314,10 +326,12 @@ export function App() {
             route={route}
             focusMode={progress.preferences.focusMode}
             sceneId={sceneId}
+            sfxEnabled={sfxEnabled}
             onNavigate={navigate}
             onToggleFocusMode={toggleFocusMode}
             onSelectScene={setSceneId}
             onEnterZen={handleEnterZen}
+            onToggleSfx={handleToggleSfx}
           />
 
           <main className="app-main">
@@ -383,6 +397,8 @@ export function App() {
         muted={progress.preferences.pomodoroMuted}
         onToggleMute={togglePomodoroMuted}
       />
+
+      <ToastHost />
     </div>
   );
 }

@@ -13,10 +13,12 @@ interface TopNavProps {
   route: AppRoute;
   focusMode: boolean;
   sceneId: SceneId;
+  sfxEnabled: boolean;
   onNavigate: (next: AppRoute) => void;
   onToggleFocusMode: () => void;
   onSelectScene: (sceneId: SceneId) => void;
   onEnterZen: () => void;
+  onToggleSfx: () => void;
 }
 
 export function TopNav({
@@ -24,10 +26,12 @@ export function TopNav({
   route,
   focusMode,
   sceneId,
+  sfxEnabled,
   onNavigate,
   onToggleFocusMode,
   onSelectScene,
   onEnterZen,
+  onToggleSfx,
 }: TopNavProps) {
   const isExams = route.name === 'exams' || route.name === 'exam-runner';
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -166,6 +170,17 @@ export function TopNav({
               </div>
             )}
           </div>
+
+          <button
+            type="button"
+            className={`top-nav-sfx-btn${sfxEnabled ? '' : ' top-nav-sfx-btn--muted'}`}
+            onClick={onToggleSfx}
+            aria-pressed={sfxEnabled}
+            aria-label={sfxEnabled ? 'ปิดเสียงเอฟเฟกต์ปุ่มกด' : 'เปิดเสียงเอฟเฟกต์ปุ่มกด'}
+            title={sfxEnabled ? 'เสียงเอฟเฟกต์ปุ่มกด: เปิด' : 'เสียงเอฟเฟกต์ปุ่มกด: ปิด'}
+          >
+            <span aria-hidden="true">{sfxEnabled ? '🔊' : '🔇'}</span>
+          </button>
 
           <button
             type="button"
