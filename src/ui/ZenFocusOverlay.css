@@ -37,7 +37,9 @@
   align-items: center;
   gap: 6px;
   padding: 5px;
-  max-width: calc(100vw - 170px);
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
   border-radius: 9999px;

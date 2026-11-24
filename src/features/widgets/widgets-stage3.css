@@ -1,10 +1,3 @@
-/* F33: Keep collapsed GlobalMusicDock pill compact on narrow phones (360px+) */
-@media (max-width: 768px) {
-  .music-dock-pill-main {
-    max-width: 118px;
-  }
-}
-
 /* Aesthetic Clock Card */
 .clock-card {
   justify-content: space-between;

@@ -123,6 +123,13 @@ a {
   .app-main {
     padding: 16px max(12px, env(safe-area-inset-right, 0px)) calc(156px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   }
+
+  /* Prevent iOS Safari auto-zoom on form controls without disabling pinch zoom (F106) */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 /* Authentic Apple Liquid Glass optical surface */
