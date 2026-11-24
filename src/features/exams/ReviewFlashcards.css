@@ -15,6 +15,8 @@
 
 .review-mode-pills {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   gap: 6px;
   padding: 4px;
   border-radius: var(--radius-pill);
@@ -319,8 +321,21 @@
 }
 
 @media (max-width: 600px) {
+  .review-mode-pills {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 18px;
+  }
+
+  .review-mode-btn {
+    padding: 6px 8px;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
   .fc-face {
-    padding: 20px 18px;
+    padding: 20px 16px;
   }
 
   .fc-rating-row {

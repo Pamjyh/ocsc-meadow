@@ -57,6 +57,8 @@
 
 .exams-tabs {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   background: rgba(255, 255, 255, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 9999px;
@@ -509,6 +511,43 @@
   }
   .runner-question-card {
     padding: 20px 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .exams-header-card,
+  .exam-card,
+  .pdf-viewer-card,
+  .runner-top,
+  .review-summary,
+  .review-item {
+    padding: 16px;
+    border-radius: 20px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .exams-tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 18px;
+  }
+
+  .exams-tab-btn {
+    justify-content: center;
+    padding: 6px 6px;
+    gap: 4px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .md-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

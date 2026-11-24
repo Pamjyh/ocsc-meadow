@@ -171,7 +171,15 @@
 /* Mobile: lift Pomodoro cleanly above the floating bottom tab bar + safe-area-inset-bottom (F2) */
 @media (max-width: 768px) {
   .pomo-root {
-    right: 12px;
-    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 20px);
+  }
+
+  .pomo-fab {
+    min-height: 40px;
+    padding: 4px 12px 4px 5px;
+    gap: 6px;
+    font-size: 0.82rem;
   }
 }

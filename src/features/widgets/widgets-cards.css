@@ -4,6 +4,8 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .widget-card-head {
@@ -121,9 +123,34 @@
 }
 
 @media (max-width: 768px) {
+  .widget-card {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
   .music-dock-root {
-    left: 12px;
-    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    left: max(10px, env(safe-area-inset-left, 0px));
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    max-width: calc(100vw - 154px);
+  }
+
+  .music-dock-pill {
+    min-height: 40px;
+    max-width: 100%;
+    padding: 3px 6px 3px 10px;
+    gap: 5px;
+  }
+
+  .music-dock-pill-main {
+    max-width: 96px;
+    font-size: 0.78rem;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 390px) {
+  .music-dock-pill-main {
+    max-width: 74px;
   }
 }
 

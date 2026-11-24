@@ -465,8 +465,22 @@
   }
 
   .study-reader {
-    padding: 20px 18px;
+    padding: 18px 14px;
     border-radius: 22px;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .study-prose {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .study-prose table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

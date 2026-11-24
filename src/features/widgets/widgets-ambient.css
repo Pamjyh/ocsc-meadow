@@ -259,6 +259,17 @@
   }
 }
 
+@media (max-width: 640px) {
+  .ambient-track-grid,
+  .ambient-mixer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ambient-now-box {
+    padding: 10px 12px;
+  }
+}
+
 /* Night Mode (.theme-night) for Ambient Player */
 .theme-night .ambient-now-box,
 .theme-night .ambient-track-chip,
