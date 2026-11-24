@@ -183,7 +183,6 @@
 }
 
 .top-nav-actions {
-  position: relative;
   z-index: 1;
   display: inline-flex;
   align-items: center;
