@@ -476,20 +476,25 @@
     font-size: 0.78rem;
   }
 
+  .top-nav-actions {
+    gap: 4px;
+  }
+
   .scene-btn-label,
   .zen-btn-label,
-  .cmdk-nav-kbd {
+  .cmdk-nav-kbd,
+  .focus-btn-label {
     display: none;
   }
 
   .top-nav-cmdk-btn {
     min-height: 38px;
-    padding: 5px 10px;
+    padding: 5px 9px;
   }
 
   .top-nav-zen-btn {
     min-height: 38px;
-    padding: 5px 10px;
+    padding: 5px 9px;
   }
 
   .scene-picker-popover {
@@ -500,7 +505,7 @@
 
   .top-nav-focus-btn {
     min-height: 38px;
-    padding: 4px 11px 4px 5px;
+    padding: 4px;
     font-size: 0.78rem;
   }
 

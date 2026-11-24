@@ -34,12 +34,17 @@ import {
   scheduleProgressSync,
   type SyncStatus,
 } from './services/dataRepository';
-import { recordStudyActivity } from './features/widgets/streakStore';
+import {
+  computeStreakSummary,
+  loadStudyActivity,
+  recordStudyActivity,
+} from './features/widgets/streakStore';
 import { useHashRoute } from './services/router';
 import { showToast } from './services/toast';
 import { isUiSfxEnabled, playUiSound, setUiSfxEnabled } from './services/uiSound';
 import { CommandPalette } from './ui/CommandPalette';
 import type { CommandItem } from './ui/commandPaletteItems';
+import { launchConfetti } from './ui/confetti';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
 import { ToastHost } from './ui/ToastHost';
 import { TopNav } from './ui/TopNav';
@@ -395,9 +400,25 @@ export function App() {
         title: 'เช็กอินอ่านหนังสือวันนี้ (+1)',
         keywords: 'streak checkin heatmap',
         run: () => {
-          recordStudyActivity(1);
-          playUiSound('checkin');
-          showToast({ message: 'เช็กอินอ่านหนังสือวันนี้แล้ว', tone: 'success' });
+          const prevSummary = computeStreakSummary(loadStudyActivity());
+          const nextSummary = computeStreakSummary(recordStudyActivity(1));
+          const milestones = new Set([3, 7, 14, 21, 30, 50, 100]);
+          if (prevSummary.todayCount === 0 && milestones.has(nextSummary.currentStreak)) {
+            playUiSound('celebrate');
+            launchConfetti({ intensity: 'soft' });
+            showToast({
+              message: `อ่านต่อเนื่องครบ ${nextSummary.currentStreak} วันแล้ว!`,
+              detail: 'รักษาความสม่ำเสมอแบบนี้ไว้ เยี่ยมมากครับ',
+              tone: 'celebrate',
+            });
+          } else {
+            playUiSound('checkin');
+            showToast({
+              message: 'เช็กอินอ่านหนังสือวันนี้แล้ว',
+              detail: `สะสมวันนี้ ${nextSummary.todayCount} กิจกรรม`,
+              tone: 'success',
+            });
+          }
         },
       },
       {
@@ -493,6 +514,7 @@ export function App() {
         <ZenFocusOverlay
           sceneId={sceneId}
           audio={audio}
+          disableEsc={cmdOpen}
           onSelectScene={setSceneId}
           onTogglePlay={handleTogglePlay}
           onPrevTrack={handlePrevTrack}

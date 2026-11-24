@@ -20,6 +20,7 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   const { sections, flatOrdered } = useMemo(() => {
     const filtered = filterCommandItems(items, query);
@@ -39,9 +40,16 @@ export function CommandPalette({ open, items, onClose }: CommandPaletteProps) {
     return { sections: grouped, flatOrdered: ordered };
   }, [items, query]);
 
-  // Reset search & focus input immediately (zero animation lag) on open
+  // Reset search, focus input immediately on open, and restore focus on close (F82)
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      if (prevFocusRef.current && document.contains(prevFocusRef.current)) {
+        prevFocusRef.current.focus();
+      }
+      prevFocusRef.current = null;
+      return;
+    }
+    prevFocusRef.current = document.activeElement as HTMLElement | null;
     setQuery('');
     setActiveIndex(0);
     const raf = window.requestAnimationFrame(() => {

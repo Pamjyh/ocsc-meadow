@@ -7,6 +7,7 @@ import './ZenFocusOverlay.css';
 interface ZenFocusOverlayProps {
   sceneId: SceneId;
   audio: AmbientPlayerState;
+  disableEsc?: boolean;
   onSelectScene: (sceneId: SceneId) => void;
   onTogglePlay: () => void;
   onPrevTrack: () => void;
@@ -35,6 +36,7 @@ function getBangkokTimeParts(now: Date): { timeText: string; dateText: string } 
 export function ZenFocusOverlay({
   sceneId,
   audio,
+  disableEsc = false,
   onSelectScene,
   onTogglePlay,
   onPrevTrack,
@@ -49,6 +51,8 @@ export function ZenFocusOverlay({
   }, []);
 
   useEffect(() => {
+    // Suspend Zen Esc handler while an overlay like CommandPalette is open (F80)
+    if (disableEsc) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -57,7 +61,7 @@ export function ZenFocusOverlay({
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onExit]);
+  }, [onExit, disableEsc]);
 
   const { timeText, dateText } = getBangkokTimeParts(now);
   const track = getAmbientTrack(audio.trackId);

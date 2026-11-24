@@ -211,6 +211,7 @@ export function TopNav({
             className={`top-nav-focus-btn${focusMode ? ' top-nav-focus-btn--on' : ''}`}
             onClick={onToggleFocusMode}
             aria-pressed={focusMode}
+            aria-label={focusMode ? 'ปิดโหมดนิ่ง' : 'เปิดโหมดนิ่ง'}
             title="หยุดภาพเคลื่อนไหวเพื่อลดการรบกวนสายตา"
           >
             <LiquidGlassIcon
@@ -219,7 +220,9 @@ export function TopNav({
               size="sm"
               shape="circle"
             />
-            <span>{focusMode ? 'โหมดนิ่ง: เปิด' : 'โหมดนิ่ง'}</span>
+            <span className="focus-btn-label">
+              {focusMode ? 'โหมดนิ่ง: เปิด' : 'โหมดนิ่ง'}
+            </span>
           </button>
         </div>
       </div>
