@@ -11,6 +11,7 @@ export type ExtraWidgetType =
   | 'photo_collection'
   | 'sticky_note'
   | 'study_streak'
+  | 'focus_garden'
   | 'aesthetic_clock'
   | 'daily_goals'
   | 'quick_study';
@@ -203,6 +204,21 @@ export const WIDGET_CATALOG: readonly WidgetCatalogMeta[] = [
     defaultVisible: true,
     defaultSize: 'half',
     defaultGrid: { x: 6, y: 20, w: 6, h: 5 },
+    minW: 4,
+    minH: 5,
+    defaultConfig: {},
+  },
+  {
+    type: 'focus_garden',
+    title: 'สวนโฟกัส (Focus Garden)',
+    description: 'ปลูกดอกไม้และต้นไม้ในทุ่งหญ้าอัตโนมัติทุกครั้งที่จับเวลา Pomodoro โฟกัสครบ 1 รอบ',
+    emoji: '🌿',
+    group: 'cozy',
+    isCore: false,
+    multiInstance: false,
+    defaultVisible: false,
+    defaultSize: 'half',
+    defaultGrid: { x: 0, y: 25, w: 6, h: 6 },
     minW: 4,
     minH: 5,
     defaultConfig: {},

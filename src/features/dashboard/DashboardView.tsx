@@ -16,6 +16,7 @@ import type { AmbientLayerKey, AmbientTrackId } from '../widgets/ambientAudio';
 import { AestheticClockCard } from '../widgets/cards/AestheticClockCard';
 import { AmbientPlayerCard } from '../widgets/cards/AmbientPlayerCard';
 import { DailyGoalsCard } from '../widgets/cards/DailyGoalsCard';
+import { FocusGardenCard } from '../widgets/cards/FocusGardenCard';
 import { PhotoCollectionCard } from '../widgets/cards/PhotoCollectionCard';
 import { QuickStudyCard } from '../widgets/cards/QuickStudyCard';
 import { StickyNoteCard } from '../widgets/cards/StickyNoteCard';
@@ -411,6 +412,9 @@ export function DashboardView({
 
       case 'study_streak':
         return <StudyStreakCard />;
+
+      case 'focus_garden':
+        return <FocusGardenCard />;
 
       case 'aesthetic_clock':
         return (

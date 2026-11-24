@@ -1,0 +1,192 @@
+.garden-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.garden-today-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(218, 245, 224, 0.85);
+  border: 1px solid rgba(46, 125, 82, 0.28);
+  color: #195b36;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.garden-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.garden-kpi-box {
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.garden-kpi-num {
+  font-family: var(--font-display);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #143652;
+  font-variant-numeric: tabular-nums;
+}
+
+.garden-kpi-label {
+  font-size: 0.72rem;
+  color: #466078;
+  margin-top: 2px;
+}
+
+.garden-patch {
+  flex: 1;
+  min-height: 112px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(220, 244, 255, 0.62) 0%,
+    rgba(218, 246, 214, 0.72) 58%,
+    rgba(182, 230, 178, 0.78) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.84);
+  box-shadow: inset 0 -6px 14px rgba(46, 125, 82, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.garden-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  max-width: 300px;
+}
+
+.garden-empty-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.garden-empty-text {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #2c4a38;
+}
+
+.garden-grid {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px 12px;
+}
+
+@keyframes garden-sway {
+  0%,
+  100% {
+    transform: rotate(-2.5deg) translateY(0);
+  }
+  50% {
+    transform: rotate(2.5deg) translateY(-1.5px);
+  }
+}
+
+.garden-plant {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.45rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow: 0 4px 10px rgba(32, 84, 52, 0.12);
+  animation: garden-sway 4.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.garden-plant--newest {
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow:
+    0 0 0 2.5px rgba(72, 184, 120, 0.48),
+    0 6px 16px rgba(32, 84, 52, 0.18);
+}
+
+.garden-more-hint {
+  font-size: 0.74rem;
+  color: #466078;
+  text-align: right;
+}
+
+.focus-mode .garden-plant {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .garden-plant {
+    animation: none;
+  }
+}
+
+.theme-night .garden-today-pill {
+  background: rgba(22, 86, 54, 0.74);
+  border-color: rgba(134, 239, 172, 0.36);
+  color: #bbf7d0;
+}
+
+.theme-night .garden-kpi-box {
+  background: rgba(18, 34, 60, 0.68);
+  border-color: rgba(186, 218, 255, 0.22);
+}
+
+.theme-night .garden-kpi-num {
+  color: #f0f6fc;
+}
+
+.theme-night .garden-kpi-label,
+.theme-night .garden-more-hint {
+  color: #b8d0e8;
+}
+
+.theme-night .garden-patch {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 42, 74, 0.76) 0%,
+    rgba(22, 62, 54, 0.78) 62%,
+    rgba(18, 52, 42, 0.86) 100%
+  );
+  border-color: rgba(186, 218, 255, 0.22);
+  box-shadow: inset 0 -6px 16px rgba(6, 20, 14, 0.35);
+}
+
+.theme-night .garden-empty-text {
+  color: #cce8d6;
+}
+
+.theme-night .garden-plant {
+  background: rgba(18, 36, 56, 0.62);
+}
+
+.theme-night .garden-plant--newest {
+  background: rgba(26, 62, 54, 0.9);
+  box-shadow:
+    0 0 0 2.5px rgba(134, 239, 172, 0.52),
+    0 6px 16px rgba(6, 22, 14, 0.36);
+}

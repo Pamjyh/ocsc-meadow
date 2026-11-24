@@ -1,5 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { showToast } from '../../services/toast';
+import { launchConfetti } from '../../ui/confetti';
 import { LiquidGlassIcon } from '../../ui/LiquidGlassIcon';
+import { GARDEN_SPECIES_META, plantFocusSession } from '../widgets/focusGardenStore';
+import { recordStudyActivity } from '../widgets/streakStore';
 import { playGentleChime } from './chime';
 import './PomodoroWidget.css';
 
@@ -30,6 +34,7 @@ export function PomodoroWidget({ muted, onToggleMute }: PomodoroWidgetProps) {
   const [endAtMs, setEndAtMs] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [completedSessions, setCompletedSessions] = useState(0);
+  const completedEndAtRef = useRef<number | null>(null);
 
   // Wall-clock driven timer (prevents background tab drift and StrictMode double side-effects - F1)
   useEffect(() => {
@@ -38,11 +43,21 @@ export function PomodoroWidget({ muted, onToggleMute }: PomodoroWidgetProps) {
     const syncClock = () => {
       const left = Math.max(0, Math.ceil((endAtMs - Date.now()) / 1000));
       setRemainingSeconds(left);
-      if (left === 0) {
+      if (left === 0 && completedEndAtRef.current !== endAtMs) {
+        completedEndAtRef.current = endAtMs;
         setRunning(false);
         setEndAtMs(null);
         if (preset === 'focus') {
           setCompletedSessions((c) => c + 1);
+          const { planted } = plantFocusSession(customMinutes);
+          const meta = GARDEN_SPECIES_META[planted.species];
+          recordStudyActivity(1);
+          launchConfetti({ intensity: 'soft' });
+          showToast({
+            message: `ปลูก${meta.label}ลงสวนโฟกัสแล้ว! ${meta.emoji}`,
+            detail: `โฟกัสครบ ${customMinutes} นาที (+1 Streak)`,
+            tone: 'celebrate',
+          });
         }
         if (!muted) playGentleChime();
       }
@@ -51,7 +66,7 @@ export function PomodoroWidget({ muted, onToggleMute }: PomodoroWidgetProps) {
     syncClock();
     const id = window.setInterval(syncClock, 500);
     return () => window.clearInterval(id);
-  }, [running, endAtMs, muted, preset]);
+  }, [running, endAtMs, muted, preset, customMinutes]);
 
   const selectPreset = (next: PomodoroPreset) => {
     const mins = PRESET_MINUTES[next].minutes;
