@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 export type AppRoute =
   | { name: 'dashboard' }
@@ -47,27 +48,68 @@ export function buildHash(route: AppRoute): string {
   }
 }
 
-export function useHashRoute(): {
+export function isSameRoute(a: AppRoute, b: AppRoute): boolean {
+  if (a.name !== b.name) return false;
+  if (a.name === 'study' && b.name === 'study') return a.docId === b.docId;
+  if (a.name === 'exams' && b.name === 'exams') return a.tab === b.tab;
+  if (a.name === 'exam-runner' && b.name === 'exam-runner') return a.examId === b.examId;
+  return true;
+}
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (updateCallback: () => void) => { finished: Promise<void> };
+};
+
+function canRunViewTransition(enabled: boolean): boolean {
+  if (!enabled || typeof document === 'undefined' || typeof window === 'undefined') {
+    return false;
+  }
+  const doc = document as ViewTransitionDocument;
+  if (typeof doc.startViewTransition !== 'function') return false;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
+  return true;
+}
+
+export function useHashRoute(options?: { enableViewTransition?: boolean }): {
   route: AppRoute;
   navigate: (next: AppRoute) => void;
 } {
   const [route, setRoute] = useState<AppRoute>(() =>
     parseHash(window.location.hash),
   );
+  const enableVtRef = useRef(options?.enableViewTransition ?? true);
+  enableVtRef.current = options?.enableViewTransition ?? true;
 
   useEffect(() => {
-    const onHashChange = () => setRoute(parseHash(window.location.hash));
+    const onHashChange = () => {
+      const parsed = parseHash(window.location.hash);
+      setRoute((prev) => (isSameRoute(prev, parsed) ? prev : parsed));
+    };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
   const navigate = useCallback((next: AppRoute) => {
     const targetHash = buildHash(next);
-    if (window.location.hash !== targetHash) {
-      window.location.hash = targetHash;
-    } else {
-      setRoute(next);
+    const apply = () => {
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      }
+      setRoute((prev) => (isSameRoute(prev, next) ? prev : next));
+    };
+
+    if (canRunViewTransition(enableVtRef.current)) {
+      const doc = document as ViewTransitionDocument;
+      try {
+        doc.startViewTransition?.(() => {
+          flushSync(apply);
+        });
+        return;
+      } catch {
+        // Fallback to immediate navigation if view transition is unavailable
+      }
     }
+    apply();
   }, []);
 
   return { route, navigate };

@@ -40,9 +40,11 @@ import { TopNav } from './ui/TopNav';
 import { ZenFocusOverlay } from './ui/ZenFocusOverlay';
 
 export function App() {
-  const { route, navigate } = useHashRoute();
   const [bootstrap, setBootstrap] = useState<BootstrapPayload>(loadCachedBootstrap);
   const [progress, setProgress] = useState<UserProgress>(loadLocalProgress);
+  const { route, navigate } = useHashRoute({
+    enableViewTransition: !progress.preferences.focusMode,
+  });
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('demo');
   const [hourFloat, setHourFloat] = useState<number>(() => getBangkokHourFloat());
   const [selectedExamMode, setSelectedExamMode] = useState<ExamMode>('timed');
@@ -281,7 +283,11 @@ export function App() {
   }, [isNight]);
 
   return (
-    <div className={`app-shell${isNight ? ' theme-night' : ''}`}>
+    <div
+      className={`app-shell${isNight ? ' theme-night' : ''}${
+        progress.preferences.focusMode ? ' focus-mode' : ''
+      }`}
+    >
       <LiquidGlassFilters />
 
       <MeadowScene
