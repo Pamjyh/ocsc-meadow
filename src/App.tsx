@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getBangkokHourFloat } from './domain/atmosphere';
 import type { BootstrapPayload, ExamMode, UserProgress } from './domain/models';
 import { DashboardView } from './features/dashboard/DashboardView';
@@ -34,8 +34,12 @@ import {
   scheduleProgressSync,
   type SyncStatus,
 } from './services/dataRepository';
+import { recordStudyActivity } from './features/widgets/streakStore';
 import { useHashRoute } from './services/router';
+import { showToast } from './services/toast';
 import { isUiSfxEnabled, playUiSound, setUiSfxEnabled } from './services/uiSound';
+import { CommandPalette } from './ui/CommandPalette';
+import type { CommandItem } from './ui/commandPaletteItems';
 import { LiquidGlassFilters } from './ui/LiquidGlassFilters';
 import { ToastHost } from './ui/ToastHost';
 import { TopNav } from './ui/TopNav';
@@ -54,6 +58,7 @@ export function App() {
   const [sceneId, setSceneId] = useState<SceneId>(loadSelectedScene);
   const [zenMode, setZenMode] = useState(false);
   const [sfxEnabled, setSfxEnabled] = useState<boolean>(isUiSfxEnabled);
+  const [cmdOpen, setCmdOpen] = useState(false);
 
   const audioRef = useRef<AmbientPlayerState>(audio);
   audioRef.current = audio;
@@ -284,6 +289,181 @@ export function App() {
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, [zenMode]);
 
+  // Global ⌘K / Ctrl+K shortcut for Command Palette
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCmdOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  const commandItems = useMemo<CommandItem[]>(() => {
+    const activeTrack = getAmbientTrack(audio.trackId);
+    const subjectTitleMap = new Map(bootstrap.subjects.map((s) => [s.code, s.shortTitle]));
+
+    const navItems: CommandItem[] = [
+      {
+        id: 'nav_dashboard',
+        group: 'นำทาง',
+        icon: '🏠',
+        title: 'หน้าแรก (Dashboard)',
+        keywords: 'home dashboard main',
+        run: () => {
+          if (zenMode) handleExitZen();
+          navigate({ name: 'dashboard' });
+        },
+      },
+      {
+        id: 'nav_study',
+        group: 'นำทาง',
+        icon: '📚',
+        title: 'คลังเนื้อหา ก.พ.',
+        keywords: 'study notes read',
+        run: () => {
+          if (zenMode) handleExitZen();
+          navigate({ name: 'study', docId: null });
+        },
+      },
+      {
+        id: 'nav_exams_interactive',
+        group: 'นำทาง',
+        icon: '📝',
+        title: 'คลังข้อสอบ (ทำในเว็บ)',
+        keywords: 'exam interactive quiz',
+        run: () => {
+          if (zenMode) handleExitZen();
+          navigate({ name: 'exams', tab: 'interactive' });
+        },
+      },
+      {
+        id: 'nav_exams_pdf',
+        group: 'นำทาง',
+        icon: '📄',
+        title: 'คลังข้อสอบ PDF',
+        keywords: 'pdf sheet download',
+        run: () => {
+          if (zenMode) handleExitZen();
+          navigate({ name: 'exams', tab: 'pdf' });
+        },
+      },
+      {
+        id: 'nav_exams_review',
+        group: 'นำทาง',
+        icon: '🃏',
+        title: 'ทบทวนแฟลชการ์ด FSRS & สมุดข้อผิด',
+        keywords: 'flashcard srs review mistake',
+        run: () => {
+          if (zenMode) handleExitZen();
+          navigate({ name: 'exams', tab: 'review' });
+        },
+      },
+    ];
+
+    const controlItems: CommandItem[] = [
+      {
+        id: 'ctrl_zen',
+        group: 'ควบคุมเร็ว',
+        icon: '⛶',
+        title: zenMode ? 'ออกจากโหมด Zen เต็มจอ' : 'เข้าสู่โหมด Zen เต็มจอ',
+        keywords: 'zen fullscreen focus',
+        run: () => (zenMode ? handleExitZen() : handleEnterZen()),
+      },
+      {
+        id: 'ctrl_music_toggle',
+        group: 'ควบคุมเร็ว',
+        icon: audio.isPlaying ? '⏸' : '▶',
+        title: audio.isPlaying ? `หยุดเพลง (${activeTrack.title})` : `เล่นเพลง (${activeTrack.title})`,
+        keywords: 'music lofi audio play pause',
+        run: handleTogglePlay,
+      },
+      {
+        id: 'ctrl_music_next',
+        group: 'ควบคุมเร็ว',
+        icon: '⏭',
+        title: 'เปลี่ยนเพลง Lo-fi ถัดไป',
+        keywords: 'next track lofi music',
+        run: handleNextTrack,
+      },
+      {
+        id: 'ctrl_streak_checkin',
+        group: 'ควบคุมเร็ว',
+        icon: '🔥',
+        title: 'เช็กอินอ่านหนังสือวันนี้ (+1)',
+        keywords: 'streak checkin heatmap',
+        run: () => {
+          recordStudyActivity(1);
+          playUiSound('checkin');
+          showToast({ message: 'เช็กอินอ่านหนังสือวันนี้แล้ว', tone: 'success' });
+        },
+      },
+      {
+        id: 'ctrl_focus_mode',
+        group: 'ควบคุมเร็ว',
+        icon: '🧘',
+        title: progress.preferences.focusMode ? 'ปิดโหมดนิ่ง (เปิดแอนิเมชัน)' : 'เปิดโหมดนิ่ง (ลดการเคลื่อนไหว)',
+        keywords: 'focus mode reduced motion',
+        run: toggleFocusMode,
+      },
+      {
+        id: 'ctrl_sfx',
+        group: 'ควบคุมเร็ว',
+        icon: sfxEnabled ? '🔇' : '🔊',
+        title: sfxEnabled ? 'ปิดเสียงเอฟเฟกต์ปุ่มกด' : 'เปิดเสียงเอฟเฟกต์ปุ่มกด',
+        keywords: 'sound sfx mute',
+        run: handleToggleSfx,
+      },
+    ];
+
+    const studyCommands: CommandItem[] = bootstrap.studyItems.map((item) => ({
+      id: `study_${item.id}`,
+      group: 'คลังเนื้อหา',
+      icon: '📖',
+      title: item.title,
+      subtitle: subjectTitleMap.get(item.subjectCode) ?? item.summary,
+      keywords: item.summary,
+      run: () => {
+        if (zenMode) handleExitZen();
+        navigate({ name: 'study', docId: item.id });
+      },
+    }));
+
+    const examCommands: CommandItem[] = bootstrap.exams.map((exam) => ({
+      id: `exam_${exam.id}`,
+      group: 'ชุดข้อสอบ',
+      icon: '⏱️',
+      title: exam.title,
+      subtitle: `${exam.questionCount} ข้อ · ${exam.durationMinutes} นาที`,
+      keywords: exam.description,
+      run: () => {
+        if (zenMode) handleExitZen();
+        handleStartExam(exam.id, 'timed');
+      },
+    }));
+
+    return [...navItems, ...controlItems, ...studyCommands, ...examCommands];
+  }, [
+    audio.isPlaying,
+    audio.trackId,
+    bootstrap.exams,
+    bootstrap.studyItems,
+    bootstrap.subjects,
+    handleEnterZen,
+    handleExitZen,
+    handleNextTrack,
+    handleStartExam,
+    handleTogglePlay,
+    handleToggleSfx,
+    navigate,
+    progress.preferences.focusMode,
+    sfxEnabled,
+    toggleFocusMode,
+    zenMode,
+  ]);
+
   const isReadingView = route.name !== 'dashboard';
   const isNight = isSceneDark(sceneId, hourFloat);
 
@@ -332,6 +512,7 @@ export function App() {
             onSelectScene={setSceneId}
             onEnterZen={handleEnterZen}
             onToggleSfx={handleToggleSfx}
+            onOpenCommandPalette={() => setCmdOpen(true)}
           />
 
           <main className="app-main">
@@ -399,6 +580,12 @@ export function App() {
       />
 
       <ToastHost />
+
+      <CommandPalette
+        open={cmdOpen}
+        items={commandItems}
+        onClose={() => setCmdOpen(false)}
+      />
     </div>
   );
 }

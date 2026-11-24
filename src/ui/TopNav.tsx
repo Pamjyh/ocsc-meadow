@@ -19,6 +19,7 @@ interface TopNavProps {
   onSelectScene: (sceneId: SceneId) => void;
   onEnterZen: () => void;
   onToggleSfx: () => void;
+  onOpenCommandPalette: () => void;
 }
 
 export function TopNav({
@@ -32,6 +33,7 @@ export function TopNav({
   onSelectScene,
   onEnterZen,
   onToggleSfx,
+  onOpenCommandPalette,
 }: TopNavProps) {
   const isExams = route.name === 'exams' || route.name === 'exam-runner';
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -107,6 +109,17 @@ export function TopNav({
         </nav>
 
         <div className="top-nav-actions">
+          <button
+            type="button"
+            className="top-nav-cmdk-btn"
+            onClick={onOpenCommandPalette}
+            aria-label="เปิดหน้าต่างค้นหาและคำสั่งด่วน (⌘K)"
+            title="ค้นหาบทเรียนและคำสั่งด่วน (⌘K / Ctrl+K)"
+          >
+            <span aria-hidden="true">🔍</span>
+            <kbd className="cmdk-nav-kbd">⌘K</kbd>
+          </button>
+
           <div className="scene-picker-wrap" ref={pickerWrapRef}>
             <button
               type="button"
