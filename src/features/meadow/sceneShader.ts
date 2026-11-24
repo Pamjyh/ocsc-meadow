@@ -51,6 +51,14 @@ float vnoise(vec2 p) {
   );
 }
 
+float fbm3(vec2 p) {
+  float v = 0.0;
+  v += 0.56 * vnoise(p);
+  v += 0.29 * vnoise(p * 2.07 + vec2(5.2, 1.3));
+  v += 0.15 * vnoise(p * 4.18 + vec2(2.7, 8.1));
+  return v;
+}
+
 vec2 coverUv(vec2 uv, vec2 canvasSize, vec2 imgSize) {
   float canvasAspect = canvasSize.x / max(canvasSize.y, 1.0);
   float imgAspect = imgSize.x / max(imgSize.y, 1.0);
@@ -331,36 +339,93 @@ void main() {
 
   vec3 finalRgb = mix(groundCol, gradedSky, skyMask);
 
-  // Drifting painted cumulus clouds tinted by 24h cycle
-  if (uMode > 1.5 && uMode < 2.5) {
-    // Mode 2 (Sea of Clouds): 2 lush gliding cloud layers + drifting valley mist
+  // Distinct per-scene cloud personalities (unique pattern, wind direction, speed & procedural wisps)
+  float skyCloudRange = max(horizonY + 0.03, 0.38);
+  if (uMode < 1.5) {
+    // Mode 1 (Blue Wildflower Meadow): gentle spring cumulus drifting right + high wispy veil
+    if (uv.y < skyCloudRange && skyMask > 0.02) {
+      float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
+      float d1 = fract(uv.x * 1.06 + 0.14 - uTime * 0.0072);
+      vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
+      float wisp = smoothstep(0.56, 0.84, fbm3(vec2(uv.x * 3.4 - uTime * 0.038, uv.y * 8.5 + 1.1))) * smoothstep(skyCloudRange, 0.05, uv.y);
+      finalRgb = mix(finalRgb, vec3(0.98, 0.99, 1.0) * cloudTint, wisp * 0.24 * skyMask * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.32 * skyMask * cloudAlphaScale);
+    }
+  } else if (uMode < 2.5) {
+    // Mode 2 (Sea of Clouds): 2 lush gliding cloud layers + drifting valley sea mist
     float upperBand = smoothstep(0.56, 0.36, uv.y);
     if (upperBand > 0.005) {
       float cy = clamp(uv.y / 0.54, 0.002, 0.998);
       float d1 = fract(uv.x - uTime * 0.013);
-      float d2 = fract(uv.x * 0.85 + 0.48 - uTime * 0.0075);
+      float d2 = fract(1.0 - uv.x * 0.82 + 0.42 + uTime * 0.006);
       vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
       vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.08 + 0.04, 0.002, 0.998)));
-      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.42 * upperBand * cloudAlphaScale);
-      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.68 * upperBand * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.40 * upperBand * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.64 * upperBand * cloudAlphaScale);
     }
     if (uv.y > 0.38) {
       float seaBand = smoothstep(0.38, 0.58, uv.y);
-      float mist1 = vnoise(vec2(uv.x * 4.5 - uTime * 0.16, uv.y * 5.0));
-      float mist2 = vnoise(vec2(uv.x * 8.0 - uTime * 0.24 + 3.1, uv.y * 7.5 + 1.4));
-      float mist = smoothstep(0.46, 0.84, mist1 * 0.6 + mist2 * 0.4) * seaBand;
-      finalRgb = mix(finalRgb, vec3(0.98, 0.99, 1.0) * cloudTint, mist * 0.24 * cloudAlphaScale);
+      float mist = smoothstep(0.46, 0.82, fbm3(vec2(uv.x * 4.8 - uTime * 0.16, uv.y * 5.2))) * seaBand;
+      finalRgb = mix(finalRgb, vec3(0.98, 0.99, 1.0) * cloudTint, mist * 0.25 * cloudAlphaScale);
     }
-  } else {
-    float skyCloudRange = max(horizonY + 0.03, 0.38);
+  } else if (uMode < 3.5) {
+    // Mode 3 (Pink Hillside Garden): mirrored soft pastel clouds drifting slowly left
     if (uv.y < skyCloudRange && skyMask > 0.02) {
       float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
-      float d1 = fract(uv.x - uTime * 0.009);
-      float d2 = fract(uv.x * 0.88 + 0.46 - uTime * 0.005);
+      float d1 = fract(1.0 - uv.x * 0.78 + 0.31 + uTime * 0.0055);
+      vec4 c1 = texture2D(uCloudTex, vec2(d1, clamp(cy * 1.12, 0.002, 0.998)));
+      float veil = smoothstep(0.54, 0.85, fbm3(vec2(uv.x * 2.8 + uTime * 0.028, uv.y * 6.0 + 3.4)));
+      finalRgb = mix(finalRgb, vec3(1.0, 0.96, 0.98) * cloudTint, veil * 0.22 * skyMask * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.28 * skyMask * cloudAlphaScale);
+    }
+  } else if (uMode < 4.5) {
+    // Mode 4 (Hilltop Meadow & Lake): tall summer cumulus drifting briskly right
+    if (uv.y < skyCloudRange && skyMask > 0.02) {
+      float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
+      float d1 = fract(uv.x * 0.70 + 0.58 - uTime * 0.0115);
+      float d2 = fract(uv.x * 1.24 + 0.22 - uTime * 0.0065);
       vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
-      vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 1.06 + 0.03, 0.002, 0.998)));
-      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.22 * skyMask * cloudAlphaScale);
+      vec4 c2 = texture2D(uCloudTex, vec2(d2, clamp(cy * 0.92 + 0.05, 0.002, 0.998)));
+      finalRgb = mix(finalRgb, c2.rgb * cloudTint, c2.a * 0.20 * skyMask * cloudAlphaScale);
       finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.38 * skyMask * cloudAlphaScale);
+    }
+  } else if (uMode < 5.5) {
+    // Mode 5 (Coastal Lighthouse): brisk sea-breeze trade-wind clouds & ocean sky streaks rushing left
+    if (uv.y < skyCloudRange && skyMask > 0.02) {
+      float cy = clamp(uv.y / skyCloudRange, 0.002, 0.998);
+      float d1 = fract(1.0 - uv.x * 0.92 + 0.67 + uTime * 0.014);
+      vec4 c1 = texture2D(uCloudTex, vec2(d1, clamp(cy * 1.18, 0.002, 0.998)));
+      float streak = smoothstep(0.52, 0.84, fbm3(vec2(uv.x * 2.2 + uTime * 0.085, uv.y * 11.0 + uv.x * 1.2)));
+      finalRgb = mix(finalRgb, vec3(0.97, 0.99, 1.0) * cloudTint, streak * 0.28 * skyMask * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.26 * skyMask * cloudAlphaScale);
+    }
+  } else if (uMode < 6.5) {
+    // Mode 6 (Kyoto Sakura Canal): airy Japanese high-altitude cirrus ribbons (zero heavy cumulus)
+    if (uv.y < skyCloudRange && skyMask > 0.02) {
+      float band = smoothstep(skyCloudRange, 0.04, uv.y);
+      float cirrus1 = smoothstep(0.54, 0.84, fbm3(vec2(uv.x * 2.6 - uTime * 0.032, uv.y * 13.0 + 0.8)));
+      float cirrus2 = smoothstep(0.58, 0.88, fbm3(vec2(uv.x * 4.4 - uTime * 0.048 + 4.1, uv.y * 16.5)));
+      float wisps = clamp(cirrus1 * 0.7 + cirrus2 * 0.5, 0.0, 1.0) * band;
+      finalRgb = mix(finalRgb, vec3(1.0, 0.98, 0.99) * cloudTint, wisps * 0.34 * skyMask * cloudAlphaScale);
+    }
+  } else if (uMode < 7.5) {
+    // Mode 7 (Snowy Alpine Peaks): crisp winter stratus & high mountain snow-wind mist (zero summer clouds)
+    if (uv.y < skyCloudRange + 0.08 && skyMask > 0.02) {
+      float highMist = smoothstep(0.52, 0.85, fbm3(vec2(uv.x * 3.0 - uTime * 0.045, uv.y * 9.5 + 2.3)));
+      float ridgeVeil = smoothstep(0.48, 0.80, fbm3(vec2(uv.x * 5.2 - uTime * 0.075, uv.y * 6.5))) * smoothstep(0.18, 0.44, uv.y);
+      float winterClouds = clamp(highMist * 0.65 + ridgeVeil * 0.55, 0.0, 1.0);
+      finalRgb = mix(finalRgb, vec3(0.95, 0.98, 1.0) * cloudTint, winterClouds * 0.32 * skyMask * cloudAlphaScale);
+    }
+  } else {
+    // Mode 8 (Seaside Train Station): low Ghibli horizon clouds drifting gently right + high wispy sky
+    if (uv.y < skyCloudRange && skyMask > 0.02) {
+      float lowBand = smoothstep(0.16, skyCloudRange * 0.85, uv.y);
+      float cy = clamp((uv.y - 0.14) / max(skyCloudRange - 0.14, 0.15), 0.002, 0.998);
+      float d1 = fract(1.0 - uv.x * 0.84 + 0.77 - uTime * 0.0068);
+      vec4 c1 = texture2D(uCloudTex, vec2(d1, cy));
+      float highCirrus = smoothstep(0.56, 0.86, fbm3(vec2(uv.x * 3.1 - uTime * 0.036, uv.y * 12.5 + 5.7))) * smoothstep(0.36, 0.04, uv.y);
+      finalRgb = mix(finalRgb, vec3(0.98, 0.99, 1.0) * cloudTint, highCirrus * 0.26 * skyMask * cloudAlphaScale);
+      finalRgb = mix(finalRgb, c1.rgb * cloudTint, c1.a * 0.32 * lowBand * skyMask * cloudAlphaScale);
     }
   }
 
