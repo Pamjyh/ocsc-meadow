@@ -6,14 +6,20 @@ export type SceneId =
   | 'scene-1'
   | 'scene-2'
   | 'scene-3'
-  | 'scene-4';
+  | 'scene-4'
+  | 'scene-5'
+  | 'scene-6'
+  | 'scene-7'
+  | 'scene-8';
+
+export type LivingShaderMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export interface SceneOption {
   id: SceneId;
   ariaLabel: string;
   previewUrl: string;
-  /** 0 = original 24h MeadowShader, 1..4 = 24h living SceneShader modes */
-  shaderMode: 0 | 1 | 2 | 3 | 4;
+  /** 0 = original 24h MeadowShader, 1..8 = 24h living SceneShader modes */
+  shaderMode: 0 | LivingShaderMode;
   objectPosition: string;
 }
 
@@ -55,6 +61,34 @@ export const SCENE_CATALOG: readonly SceneOption[] = [
     shaderMode: 4,
     objectPosition: 'center center',
   },
+  {
+    id: 'scene-5',
+    ariaLabel: 'พื้นหลังที่ 6',
+    previewUrl: './bg-scene-5.jpg',
+    shaderMode: 5,
+    objectPosition: 'center center',
+  },
+  {
+    id: 'scene-6',
+    ariaLabel: 'พื้นหลังที่ 7',
+    previewUrl: './bg-scene-6.jpg',
+    shaderMode: 6,
+    objectPosition: 'center center',
+  },
+  {
+    id: 'scene-7',
+    ariaLabel: 'พื้นหลังที่ 8',
+    previewUrl: './bg-scene-7.jpg',
+    shaderMode: 7,
+    objectPosition: 'center center',
+  },
+  {
+    id: 'scene-8',
+    ariaLabel: 'พื้นหลังที่ 9',
+    previewUrl: './bg-scene-8.jpg',
+    shaderMode: 8,
+    objectPosition: 'center center',
+  },
 ] as const;
 
 const LEGACY_SCENE_MAP: Record<string, SceneId> = {
@@ -72,7 +106,7 @@ export function getSceneOption(id: SceneId): SceneOption {
   return SCENE_CATALOG.find((scene) => scene.id === id) ?? SCENE_CATALOG[0]!;
 }
 
-/** All 5 scenes follow the live 24-hour Bangkok day/night Liquid Glass cycle. */
+/** All 9 scenes follow the live 24-hour Bangkok day/night Liquid Glass cycle. */
 export function isSceneDark(_id: SceneId, hourFloat: number): boolean {
   return isDarkAtmosphere(hourFloat);
 }

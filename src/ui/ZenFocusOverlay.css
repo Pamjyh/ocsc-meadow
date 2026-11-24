@@ -37,6 +37,9 @@
   align-items: center;
   gap: 6px;
   padding: 5px;
+  max-width: calc(100vw - 170px);
+  overflow-x: auto;
+  scrollbar-width: none;
   border-radius: 9999px;
   background: linear-gradient(
     180deg,
@@ -49,9 +52,14 @@
   box-shadow: 0 10px 28px rgba(14, 34, 54, 0.16);
 }
 
+.zen-scene-bar::-webkit-scrollbar {
+  display: none;
+}
+
 .zen-scene-thumb-btn {
   width: 34px;
   height: 24px;
+  flex-shrink: 0;
   padding: 0;
   border-radius: 9999px;
   overflow: hidden;
