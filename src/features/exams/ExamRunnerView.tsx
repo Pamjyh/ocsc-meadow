@@ -14,6 +14,7 @@ import {
 import { gradeExam } from '../../domain/scoring';
 import { loadExamDetail } from '../../services/dataRepository';
 import type { AppRoute } from '../../services/router';
+import { ExamScratchpad, type ScratchStroke } from './ExamScratchpad';
 import { recordExamMistakes } from './reviewStore';
 import './ExamsView.css';
 
@@ -45,6 +46,9 @@ export function ExamRunnerView({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [submittedAttempt, setSubmittedAttempt] = useState<ExamAttempt | null>(null);
   const [onlyWrongFilter, setOnlyWrongFilter] = useState(false);
+  const [scratchOpen, setScratchOpen] = useState(false);
+  const [scratchStrokesByQ, setScratchStrokesByQ] = useState<Record<string, ScratchStroke[]>>({});
+  const [scratchNotesByQ, setScratchNotesByQ] = useState<Record<string, string>>({});
 
   const savedSession = progress.inProgressExams[examId];
   const mode: ExamMode = savedSession?.mode ?? initialMode;
@@ -405,21 +409,35 @@ export function ExamRunnerView({
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
                 marginBottom: 14,
               }}
             >
               <span className="exam-chip">
                 ข้อที่ {currentIndex + 1} จาก {questions.length}
               </span>
-              <button
-                type="button"
-                className={`study-action-btn${
-                  flaggedIds.includes(currentQ.id) ? ' study-action-btn--bm' : ''
-                }`}
-                onClick={() => toggleFlag(currentQ.id)}
-              >
-                {flaggedIds.includes(currentQ.id) ? '★ ปักธงทบทวนแล้ว' : '☆ ปักธงทบทวน'}
-              </button>
+              <div style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className={`study-action-btn${
+                    scratchOpen ? ' study-action-btn--done' : ''
+                  }`}
+                  aria-pressed={scratchOpen}
+                  onClick={() => setScratchOpen((v) => !v)}
+                >
+                  {scratchOpen ? '✏️ ซ่อนกระดานทด' : '✏️ กระดานทดเลข'}
+                </button>
+                <button
+                  type="button"
+                  className={`study-action-btn${
+                    flaggedIds.includes(currentQ.id) ? ' study-action-btn--bm' : ''
+                  }`}
+                  onClick={() => toggleFlag(currentQ.id)}
+                >
+                  {flaggedIds.includes(currentQ.id) ? '★ ปักธงทบทวนแล้ว' : '☆ ปักธงทบทวน'}
+                </button>
+              </div>
             </div>
 
             <div
@@ -482,6 +500,21 @@ export function ExamRunnerView({
                 </button>
               )}
             </div>
+
+            {scratchOpen && (
+              <ExamScratchpad
+                questionOrder={currentQ.order}
+                strokes={scratchStrokesByQ[currentQ.id] ?? []}
+                noteText={scratchNotesByQ[currentQ.id] ?? ''}
+                onChangeStrokes={(next) =>
+                  setScratchStrokesByQ((prev) => ({ ...prev, [currentQ.id]: next }))
+                }
+                onChangeNote={(next) =>
+                  setScratchNotesByQ((prev) => ({ ...prev, [currentQ.id]: next }))
+                }
+                onClose={() => setScratchOpen(false)}
+              />
+            )}
           </section>
         )}
 
