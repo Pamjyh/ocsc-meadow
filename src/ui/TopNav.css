@@ -8,6 +8,7 @@
 }
 
 .top-nav-inner {
+  position: relative;
   pointer-events: auto;
   max-width: var(--content-max-width);
   margin: 0 auto;
@@ -16,6 +17,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  border-radius: 9999px;
+}
+
+/* Keep backdrop-filter on ::before (sibling, not ancestor) so mobile position:fixed .top-nav-links is NEVER trapped inside the top bar (F108) */
+.top-nav-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.54) 0%,
@@ -24,7 +36,6 @@
   backdrop-filter: blur(22px) saturate(210%) brightness(1.08);
   -webkit-backdrop-filter: blur(22px) saturate(210%) brightness(1.08);
   border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 9999px;
   box-shadow:
     0 12px 32px rgba(22, 48, 72, 0.14),
     inset 0 1.5px 0 rgba(255, 255, 255, 0.94),
@@ -32,6 +43,8 @@
 }
 
 .top-nav-brand {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -49,8 +62,20 @@
   text-overflow: ellipsis;
 }
 
+.top-nav-brand > :first-child {
+  flex-shrink: 0;
+}
+
+.top-nav-brand > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .top-nav-links {
   position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -158,6 +183,8 @@
 }
 
 .top-nav-actions {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 6px;

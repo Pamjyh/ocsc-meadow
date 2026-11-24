@@ -1,6 +1,6 @@
 /* Smooth 600ms dissolve between Light and Dark Liquid Glass across ALL pages */
 .glass-card,
-.top-nav-inner,
+.top-nav-inner::before,
 .top-nav-links,
 .top-nav-link,
 .top-nav-cmdk-btn,
@@ -300,7 +300,7 @@
 }
 
 /* Dark Liquid Glass Floating Nav & Bottom Tab Bar */
-.theme-night .top-nav-inner,
+.theme-night .top-nav-inner::before,
 .theme-night .pomo-fab,
 .theme-night .pomo-panel {
   background: linear-gradient(180deg, rgba(16, 30, 54, 0.68), rgba(10, 20, 38, 0.56));
