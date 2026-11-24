@@ -102,7 +102,6 @@ export function ZenFocusOverlay({
           {timeText}
         </div>
         <div className="zen-date">{dateText}</div>
-        <p className="zen-subtitle">หายใจลึกๆ แล้วโฟกัสกับตรงหน้าทีละก้าว</p>
       </div>
 
       <div className="zen-bottom-bar">
